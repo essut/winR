@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-## Load all functions by running everything from line 4-108
+## Load all functions by running everything from line 4-120
 outputCIGAR.to.long <- function(outputCIGAR) {
   outputCIGAR.long <-
     reshape(
@@ -33,11 +33,23 @@ outputCIGAR.to.long <- function(outputCIGAR) {
 
 
 filter.outputCIGAR.long <-
-  function(outputCIGAR.long, minimum.count, remove.mitochondria = TRUE) {
+  function(
+    outputCIGAR.long,
+    minimum.count,
+    remove.mitochondria = TRUE,
+    remove.drugR.markers = TRUE
+  ) {
     
     if (remove.mitochondria) {
       outputCIGAR.long <-
         outputCIGAR.long[!grepl("MIT", outputCIGAR.long[["locus"]]), ]
+    }
+    
+    if (remove.drugR.markers) {
+      outputCIGAR.long <-
+        outputCIGAR.long[!grepl("DHPS", outputCIGAR.long[["locus"]]), ]
+      outputCIGAR.long <-
+        outputCIGAR.long[!grepl("MDR1", outputCIGAR.long[["locus"]]), ]
     }
     
     outputCIGAR.long.counts.per.locus <-

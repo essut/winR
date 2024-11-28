@@ -66,7 +66,7 @@ mall.estimate[is.na(mall.estimate[["relatedness"]]), "relatedness"] <-
 
 
 # FIXME: change to path of between-infection relatedness estimate
-mall.estimate.file <- "location/to/mhap_relatedness_estimate.tsv"
+mall.estimate.file <- "location/to/mhap_between_relatedness_estimate.tsv"
 
 write.table(
   mall.estimate,

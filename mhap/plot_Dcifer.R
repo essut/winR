@@ -14,7 +14,7 @@ metadata <- read_excel(metadata.file)
 
 
 # FIXME: change to path of between-infection relatedness estimate
-mall.estimate.file <- "location/to/mhap_relatedness_estimate.tsv"
+mall.estimate.file <- "location/to/mhap_between_relatedness_estimate.tsv"
 
 mall.estimate <- read.delim(mall.estimate.file)
 

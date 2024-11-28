@@ -18,7 +18,7 @@ dres0 <- ibdDat(dsmp, coi, afreq)
 dmat <- dres0[, , "estimate"]
 m1.estimate <- as.data.frame(as.table(dmat))
 m1.estimate <- m1.estimate[!is.na(m1.estimate[["Freq"]]), ]
-names(m1.estimate) <- c("sample_id1", "sample_id2", "M1")
+names(m1.estimate) <- c("sample_id2", "sample_id1", "M1")
 
 
 ## allow multiple pairs of strains to be related between two infections
@@ -36,8 +36,8 @@ rtotal2 <- sapply(sig2, sum)
 
 samples <- names(dsmp)
 sig <- data.frame(
-  sample_id1 = samples[isig[, 2]],
-  sample_id2 = samples[isig[, 1]],
+  sample_id1 = samples[isig[, 1]],
+  sample_id2 = samples[isig[, 2]],
   M = M2,
   rtotal = rtotal2
 )
@@ -52,13 +52,19 @@ coi.df <-
     row.names = NULL
   )
 mall.estimate <-
-  merge(mall.estimate, coi.df, by.x = "sample_id1", by.y = "sample_id")
-mall.estimate <-
   merge(mall.estimate, coi.df, by.x = "sample_id2", by.y = "sample_id")
+mall.estimate <-
+  merge(
+    mall.estimate,
+    coi.df,
+    by.x = "sample_id1",
+    by.y = "sample_id",
+    suffixes = c("2", "1")
+  )
 
 mall.estimate[["scaled_r"]] <-
   mall.estimate[["rtotal"]] /
-  (pmin(mall.estimate[["coi.x"]], mall.estimate[["coi.y"]]))
+  (pmin(mall.estimate[["coi1"]], mall.estimate[["coi2"]]))
 
 mall.estimate[["relatedness"]] <- mall.estimate[["scaled_r"]]
 mall.estimate[is.na(mall.estimate[["relatedness"]]), "relatedness"] <-

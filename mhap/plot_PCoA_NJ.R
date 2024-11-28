@@ -271,7 +271,10 @@ data <-
 # FIXME: determine path to save PCoA plots
 PCoA.prefix.filename <- "location/to/mhap_PCoA"
 
-m <- combn(3, 2)
+# FIXME: number of PCoA axes to plot
+n.axis <- 3
+
+m <- combn(n.axis, 2)
 for (j in seq_len(ncol(m))) {
   x <- m[1, j]
   y <- m[2, j]
@@ -289,12 +292,13 @@ for (j in seq_len(ncol(m))) {
         colour = as.factor(.data[[metadata.group.column]])
       )
     ) +
-    geom_point(alpha = 0.8, size = 5) +
-    theme_classic() +
-    labs(colour = metadata.group.column) +
-    theme(legend.position = "bottom") +
-    xlab(paste0("Coordinate ", x, " (", round(Broken_stick[x], digits = 2), "%)")) +
-    ylab(paste0("Coordinate ", y, " (", round(Broken_stick[y], digits = 2), "%)"))
+      geom_point(alpha = 0.8, size = 5) +
+      theme_classic() +
+      labs(colour = metadata.group.column) +
+      theme(legend.position = "bottom") +
+      xlab(paste0("Coordinate ", x, " (", round(Broken_stick[x], digits = 2), "%)")) +
+      ylab(paste0("Coordinate ", y, " (", round(Broken_stick[y], digits = 2), "%)")) +
+      scale_colour_manual(palette.colors(palette = "Paired"))
   )
   
   dev.off()
@@ -308,7 +312,7 @@ cls <- setNames(metadata[[metadata.group.column]], metadata[[metadata.sample.col
 tip.groups <- cls[tr[["tip.label"]]]
 
 groups <- levels(as.factor(tip.groups))
-group.palette <- setNames(scales::hue_pal()(length(groups)), groups)
+group.palette <- setNames(palette.colors(length(groups), "Paired"), groups)
 
 tip.colours <- group.palette[as.character(tip.groups)]
 edge.colours <- group.NJ(tr, tip.colours, "#E5E4E2")

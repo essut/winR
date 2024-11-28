@@ -69,3 +69,16 @@ write.table(
   sep = "\t",
   row.names = FALSE
 )
+
+
+# FIXME: change to path of within-infection relatedness estimate
+relatedness_summary_file <- "location/to/mhap_within_relatedness_summary.tsv"
+
+relatedness_summary <- moire::summarize_relatedness(mcmc_results)
+write.table(
+  relatedness_summary,
+  relatedness_summary_file,
+  quote = FALSE,
+  sep = "\t",
+  row.names = FALSE
+)

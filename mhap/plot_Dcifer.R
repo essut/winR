@@ -59,7 +59,9 @@ ggplot(
   mall.estimate.meta,
   aes(x = as.factor(.data[[paste0(metadata.group.column, ".x")]]), y = relatedness)
 ) +
-  geom_boxplot() +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = 0.35, height = 0, alpha = 0.5) +
+  ylim(0, 1) +
   xlab(metadata.group.column) +
   theme_classic()
 
@@ -85,7 +87,8 @@ for (IBD.threshold in IBD.thresholds) {
   print(
     ggnet2(g, color = metadata.group.column, size = 6, palette = "Paired", legend.position = "bottom") +
       geom_point(aes(color = color), size = 6, color = "black") +
-      geom_point(aes(color = color), size = 5)
+      geom_point(aes(color = color), size = 5) +
+      ggtitle(IBD.threshold)
   )
   
   dev.off()

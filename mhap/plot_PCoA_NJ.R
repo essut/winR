@@ -229,9 +229,9 @@ dev.off()
 ## if not, go back and change the cutoff
 dlong.major.wide.locfilt.samfilt <-
   dlong.major.wide.locfilt[
-    ,
-    dlong.major.wide.locfilt.missingness[["missing.sample.per.locus"]] <=
+    dlong.major.wide.locfilt.missingness[["missing.locus.per.sample"]] <=
       missing.locus.per.sample.cutoff
+    ,
   ]
 
 

@@ -249,6 +249,10 @@ get.usable.markers(dlong.major.wide.locfilt.samfilt.missingness)
 
 dist <- dist.gene(dlong.major.wide.locfilt.samfilt)
 
+# FIXME: change according sample and group column in metadata
+metadata.sample.column <- "ID"
+metadata.group.column <- "Year"
+
 
 ## lines below create PCoA plots
 
@@ -256,10 +260,6 @@ res <- pcoa(dist)
 vectors <- res[["vectors"]]
 Broken_stick <- res[["values"]][["Broken_stick"]] * 100
 
-
-# FIXME: change according sample and group column in metadata
-metadata.sample.column <- "ID"
-metadata.group.column <- "Year"
 
 data <-
   merge(

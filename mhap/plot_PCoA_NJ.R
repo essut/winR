@@ -325,7 +325,7 @@ NJ.prefix.filename <- "location/to/mhap_NJ"
 
 
 ## rooted, labelled
-# FIXME: adjust size (in inches) of PCoA plot
+# FIXME: adjust size (in inches) of NJ plot
 pdf(paste0(NJ.prefix.filename, "_rooted_labelled.pdf"), width = 7, height = 7.5)
 par(xpd = TRUE)
 
@@ -351,7 +351,7 @@ legend(
 dev.off()
 
 ## unrooted, unlabelled
-# FIXME: adjust size (in inches) of PCoA plot
+# FIXME: adjust size (in inches) of NJ plot
 pdf(paste0(NJ.prefix.filename, "_unrooted_unlabelled.pdf"), width = 7, height = 7.5)
 par(xpd = TRUE)
 

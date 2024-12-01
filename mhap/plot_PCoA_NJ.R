@@ -300,7 +300,7 @@ for (j in seq_len(ncol(m))) {
       theme(legend.position = "bottom") +
       xlab(paste0("Coordinate ", x, " (", round(Broken_stick[x], digits = 2), "%)")) +
       ylab(paste0("Coordinate ", y, " (", round(Broken_stick[y], digits = 2), "%)")) +
-      scale_colour_manual(palette.colors(palette = "Paired"))
+      scale_colour_manual(values = palette.colors(palette = "Paired"))
   )
   
   dev.off()

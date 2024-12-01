@@ -49,6 +49,7 @@ plot.missing.sample.per.locus <-
     hist(
       dlong.major.wide.missingness[["missing.sample.per.locus"]],
       breaks = "FD",
+      right = FALSE,
       main = "Number of missing sample per locus",
       xlab = NULL
     )
@@ -62,6 +63,7 @@ plot.missing.locus.per.sample <-
     hist(
       dlong.major.wide.missingness[["missing.locus.per.sample"]],
       breaks = "FD",
+      right = FALSE,
       main = "Number of missing locus per sample",
       xlab = NULL
     )

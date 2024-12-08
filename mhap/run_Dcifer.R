@@ -1,7 +1,29 @@
 #!/usr/bin/env Rscript
 library(dcifer)
 
-## Load all functions by running everything from line 5-70
+## Load all functions by running everything from line 5-92
+# use case: alleles in dsmp are not present in the population allele 
+pad.afreq <- function(afreq, dsmp) {
+  # assumes the sample allele frequencies are more diverse
+  smpafreq <- dsmp[[1]]
+  
+  # normalise number of locus in population
+  locus.diff <- setdiff(names(smpafreq), names(afreq))
+  afreq <- c(afreq, setNames(vector("list", length(locus.diff)), locus.diff))
+  afreq <- afreq[order(names(afreq))]
+  
+  # normalise number of allele in population
+  for (i in seq_along(smpafreq)) {
+    allele.diff <- setdiff(names(smpafreq[[i]]), names(afreq[[i]]))
+    afreq[[i]] <-
+      c(afreq[[i]], setNames(numeric(length(allele.diff)), allele.diff))
+    afreq[[i]] <- afreq[[i]][order(names(afreq[[i]]))]
+  }
+  
+  return(afreq)
+}
+
+
 get.m1.estimate <- function(dres0) {
   dmat <- dres0[, , "estimate"]
   m1.estimate <- as.data.frame(as.table(dmat))

@@ -74,18 +74,25 @@ IBD.thresholds <- c(1, 1/2, 1/4, 1/8) * 0.95
 # FIXME: determine path to save plots
 prefix.filename <- "location/to/mhap_network"
 
+g <- network(mall.estimate, directed = FALSE, vertices = metadata)
+
 for (IBD.threshold in IBD.thresholds) {
-  mall.estimate.subset <-
-    mall.estimate[mall.estimate[["relatedness"]] >= IBD.threshold, ]
-  
-  g <- network(mall.estimate.subset, directed = FALSE, vertices = metadata)
-  
+  net <- network.copy(g)
+  net <-
+    delete.edges(net, which(get.edge.value(net, "relatedness") < IBD.threshold))
+
   # FIXME: adjust size (in inches) of network plot
   pdf(paste0(prefix.filename, "_", IBD.threshold, ".pdf"), width = 7, height = 7.5)
   
   # FIXME: adjust metadata as necessary
   print(
-    ggnet2(g, color = metadata.group.column, size = 6, palette = "Paired", legend.position = "bottom") +
+    ggnet2(
+      net,
+      color = metadata.group.column,
+      size = 6,
+      palette = "Paired",
+      legend.position = "bottom"
+    ) +
       geom_point(aes(color = color), size = 6, color = "black") +
       geom_point(aes(color = color), size = 5) +
       ggtitle(IBD.threshold)

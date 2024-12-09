@@ -74,6 +74,11 @@ IBD.thresholds <- c(1, 1/2, 1/4, 1/8) * 0.95
 # FIXME: determine path to save plots
 prefix.filename <- "location/to/mhap_network"
 
+# "default" colour palettes, can accommodate up to 30 groups
+cols <- palette.colors(palette = "Polychrome 36")[-(1:2)]
+x <- as.factor(metadata[[metadata.group.column]])
+palette <- setNames(cols[1:nlevels(x)], levels(x))
+
 g <- network(mall.estimate, directed = FALSE, vertices = metadata)
 
 for (IBD.threshold in IBD.thresholds) {
@@ -90,11 +95,9 @@ for (IBD.threshold in IBD.thresholds) {
       net,
       color = metadata.group.column,
       size = 6,
-      palette = "Paired",
+      palette = palette,
       legend.position = "bottom"
     ) +
-      geom_point(aes(color = color), size = 6, color = "black") +
-      geom_point(aes(color = color), size = 5) +
       ggtitle(IBD.threshold)
   )
   

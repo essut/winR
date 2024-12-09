@@ -270,6 +270,12 @@ data <-
   )
 
 
+# "default" colour palettes, can accommodate up to 30 groups
+cols <- palette.colors(palette = "Polychrome 36")[-(1:2)]
+x <- as.factor(metadata[[metadata.group.column]])
+palette <- setNames(cols[1:nlevels(x)], levels(x))
+
+
 # FIXME: determine path to save PCoA plots
 PCoA.prefix.filename <- "location/to/mhap_PCoA"
 
@@ -300,7 +306,7 @@ for (j in seq_len(ncol(m))) {
       theme(legend.position = "bottom") +
       xlab(paste0("Coordinate ", x, " (", round(Broken_stick[x], digits = 2), "%)")) +
       ylab(paste0("Coordinate ", y, " (", round(Broken_stick[y], digits = 2), "%)")) +
-      scale_colour_manual(values = palette.colors(palette = "Paired"))
+      scale_colour_manual(values = palette)
   )
   
   dev.off()
@@ -308,15 +314,16 @@ for (j in seq_len(ncol(m))) {
 
 
 ## lines below create NJ plots
+# "default" colour palettes, can accommodate up to 30 groups
+cols <- palette.colors(palette = "Polychrome 36")[-(1:2)]
+x <- as.factor(metadata[[metadata.group.column]])
+palette <- setNames(cols[1:nlevels(x)], levels(x))
 
 tr <- nj(dist)
 cls <- setNames(metadata[[metadata.group.column]], metadata[[metadata.sample.column]])
 tip.groups <- cls[tr[["tip.label"]]]
 
-groups <- levels(as.factor(tip.groups))
-group.palette <- setNames(palette.colors(length(groups), "Paired"), groups)
-
-tip.colours <- group.palette[as.character(tip.groups)]
+tip.colours <- palette[as.character(tip.groups)]
 edge.colours <- group.NJ(tr, tip.colours, "#E5E4E2")
 
 
@@ -342,7 +349,7 @@ plot(
 legend(
   "bottom",
   groups,
-  fill = group.palette,
+  fill = palette,
   horiz = TRUE,
   title = metadata.group.column,
   inset = -0.15
@@ -368,7 +375,7 @@ plot(
 legend(
   "bottom",
   groups,
-  fill = group.palette,
+  fill = palette,
   horiz = TRUE,
   title = metadata.group.column,
   inset = -0.15

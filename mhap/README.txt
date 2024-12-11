@@ -1,14 +1,14 @@
-Before running the scripts, install 'dcifer', 'RColorBrewer', 'ape', 'network', 'sna', 'readxl', 'moire', 'GGally':
+Before running the scripts, install 'moire', 'dcifer', 'readxl', 'ggnetwork', 'ape':
 
 pkgs <- character()
-for (package in c("dcifer", "RColorBrewer", "ape", "network", "sna", "readxl", "moire", "GGally")) {
+for (package in c("moire", "dcifer", "readxl", "ggnetwork", "ape")) {
   if (!requireNamespace(package, quietly = TRUE)) {
     pkgs <- c(pkgs, package)
   }
 }
 install.packages(pkgs, repos = c("https://eppicenter.r-universe.dev", "https://cloud.r-project.org"))
 
-This might take around ten minutes to install everything :)
+This might take around 15 minutes to install everything :)
 
 Steps:
 1. prepare_mhap_data.R

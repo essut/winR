@@ -1,8 +1,7 @@
 #!/usr/bin/env Rscript
 library(readxl)
 library(network)
-library(sna)
-library(GGally)
+library(ggnetwork)
 
 ## Change FIXME lines to the appropriate parameters
 
@@ -91,14 +90,13 @@ for (IBD.threshold in IBD.thresholds) {
   
   # FIXME: adjust metadata as necessary
   print(
-    ggnet2(
-      net,
-      color = metadata.group.column,
-      size = 6,
-      palette = palette,
-      legend.position = "bottom"
-    ) +
-      ggtitle(IBD.threshold)
+    ggplot(net, aes(x, y, xend = xend, yend = yend, fill = as.factor(.data[[metadata.group.column]]))) +
+      geom_edges(linewidth = 0.2) +
+      geom_nodes(size = 5, shape = 21) +
+      theme_blank() +
+      labs(title = IBD.threshold, fill = metadata.group.column) +
+      theme(legend.position = "bottom") +
+      scale_fill_manual(values = palette)
   )
   
   dev.off()

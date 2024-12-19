@@ -348,7 +348,7 @@ plot(
 
 legend(
   "bottom",
-  groups,
+  levels(x),
   fill = palette,
   horiz = TRUE,
   title = metadata.group.column,
@@ -374,7 +374,7 @@ plot(
 
 legend(
   "bottom",
-  groups,
+  levels(x),
   fill = palette,
   horiz = TRUE,
   title = metadata.group.column,

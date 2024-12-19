@@ -273,7 +273,7 @@ frequencies <- create.frequencies(dlong, markers, metadata.group.column)
 
 ## check how many markers are used for all groups
 frequencies <- synchronise.used.markers(frequencies)
-lengths(frequencies)[1]
+nrow(frequencies[[1]])
 
 
 # FIXME: change to path of diversities

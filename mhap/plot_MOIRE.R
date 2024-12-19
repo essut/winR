@@ -77,7 +77,6 @@ coi_plot_file <- "location/to/mhap_COI.pdf"
 
 pdf(file = coi_plot_file, width = 7, height = 7)
 
-# FIXME: COI plot framework, adjust metadata as necessary
 ggplot(
   coi_summary,
   aes(x = as.factor(.data[[metadata_group_column]]), y = post_coi_mean)
@@ -100,7 +99,6 @@ polyclonal_prevalence_plot_file <- "location/to/mhap_polyclonal_prevalence.pdf"
 
 pdf(file = polyclonal_prevalence_plot_file, width = 7, height = 7)
 
-# FIXME: polyclonal prevalence plot framework, adjust metadata as necessary
 ggplot(
   polyclonal_prevalence,
   aes(
@@ -124,7 +122,6 @@ effective_coi_plot_file <- "location/to/mhap_effective_COI.pdf"
 
 pdf(file = effective_coi_plot_file, width = 7, height = 7)
 
-# FIXME: Effective COI plot framework, adjust metadata as necessary
 ggplot(
   effective_coi_summary,
   aes(x = as.factor(.data[[metadata_group_column]]), y = post_effective_coi_mean)

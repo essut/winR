@@ -88,7 +88,7 @@ for (IBD.threshold in IBD.thresholds) {
   # FIXME: adjust size (in inches) of network plot
   pdf(paste0(prefix.filename, "_", IBD.threshold, ".pdf"), width = 7, height = 7.5)
   
-  # FIXME: adjust metadata as necessary
+  # FIXME: relatedness network framework, adjust metadata as necessary
   print(
     ggplot(net, aes(x, y, xend = xend, yend = yend, fill = as.factor(.data[[metadata.group.column]]))) +
       geom_edges(linewidth = 0.2) +

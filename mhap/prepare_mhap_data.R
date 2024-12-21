@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-## Load all functions by running everything from line 4-120
+## Load all functions by running everything from line 4-122
 outputCIGAR.to.long <- function(outputCIGAR) {
   outputCIGAR.long <-
     reshape(
@@ -36,21 +36,23 @@ filter.outputCIGAR.long <-
   function(
     outputCIGAR.long,
     minimum.count,
-    remove.mitochondria = TRUE,
-    remove.drugR.markers = TRUE
+    keep.marker = "microhaplotype"
   ) {
     
-    if (remove.mitochondria) {
-      outputCIGAR.long <-
-        outputCIGAR.long[!grepl("MIT", outputCIGAR.long[["locus"]]), ]
-    }
-    
-    if (remove.drugR.markers) {
-      outputCIGAR.long <-
-        outputCIGAR.long[!grepl("DHPS", outputCIGAR.long[["locus"]]), ]
-      outputCIGAR.long <-
-        outputCIGAR.long[!grepl("MDR1", outputCIGAR.long[["locus"]]), ]
-    }
+    outputCIGAR.long <-
+      switch (
+        keep.marker,
+        microhaplotype = {
+          outputCIGAR.long[!grepl("MIT|DHPS|MDR1", outputCIGAR.long[["locus"]]), ]
+        },
+        drugR = {
+          outputCIGAR.long[grepl("DHPS|MDR1", outputCIGAR.long[["locus"]]), ]
+        },
+        mitochondria = {
+          outputCIGAR.long[grepl("MIT", outputCIGAR.long[["locus"]]), ]
+        },
+        stop("Valid options are 'microhaplotype', 'drugR', 'mitochondria'")
+      )
     
     outputCIGAR.long.counts.per.locus <-
       aggregate(count ~ sample_id + locus, outputCIGAR.long, sum)

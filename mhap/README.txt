@@ -19,3 +19,11 @@ Steps:
 6. plot_PCoA_NJ.R
 
 After each step, please restart R.
+
+
+To evaluate the performance of a genetic marker panel in inferring relatedness, install 'paneljudge':
+
+install.packages("devtools")
+devtools::install_github("aimeertaylor/paneljudge", build_vignettes = TRUE)
+
+After prepare_mhap_data.R, do run_paneljudge.R then plot_paneljudge.R.

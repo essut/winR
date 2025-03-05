@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 ## Load all functions by running everything from line 4-122
-outputCIGAR.to.long <- function(outputCIGAR) {
+outputCIGAR.to.long <- function(outputCIGAR, keep.unused.alleles = FALSE) {
   outputCIGAR.long <-
     reshape(
       outputCIGAR,
@@ -15,20 +15,20 @@ outputCIGAR.to.long <- function(outputCIGAR) {
     )
   row.names(outputCIGAR.long) <- NULL
   
-  # remove unused alleles
-  outputCIGAR.long.reduced <-
-    outputCIGAR.long[outputCIGAR.long[["count"]] > 0, ]
+  if (!keep.unused.alleles) {
+    outputCIGAR.long <- outputCIGAR.long[outputCIGAR.long[["count"]] > 0, ]
+  }
   
   # format data to required columns
-  locus.allele <- strsplit(outputCIGAR.long.reduced[["pseudoCIGAR"]], ",")
-  outputCIGAR.long.reduced[["locus"]] <-
+  locus.allele <- strsplit(outputCIGAR.long[["pseudoCIGAR"]], ",")
+  outputCIGAR.long[["locus"]] <-
     vapply(locus.allele, "[[", character(1), 1)
-  outputCIGAR.long.reduced[["allele"]] <-
+  outputCIGAR.long[["allele"]] <-
     vapply(locus.allele, "[[", character(1), 2)
-  outputCIGAR.long.reduced <-
-    outputCIGAR.long.reduced[, c("sample_id", "locus", "allele", "count")]
+  outputCIGAR.long <-
+    outputCIGAR.long[, c("sample_id", "locus", "allele", "count")]
   
-  outputCIGAR.long.reduced
+  outputCIGAR.long
 }
 
 

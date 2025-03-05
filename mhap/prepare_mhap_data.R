@@ -1,8 +1,8 @@
 #!/usr/bin/env Rscript
 
-## Load all functions by running everything from line 4-122
+## Load all functions by running everything from line 4-88
 outputCIGAR.to.long <- function(outputCIGAR, keep.unused.alleles = FALSE) {
-  outputCIGAR.long <-
+  long <-
     reshape(
       outputCIGAR,
       direction = "long",
@@ -13,112 +13,78 @@ outputCIGAR.to.long <- function(outputCIGAR, keep.unused.alleles = FALSE) {
       idvar = "sample_id",
       ids = outputCIGAR[["sample"]]
     )
-  row.names(outputCIGAR.long) <- NULL
+  row.names(long) <- NULL
   
   if (!keep.unused.alleles) {
-    outputCIGAR.long <- outputCIGAR.long[outputCIGAR.long[["count"]] > 0, ]
+    long <- long[long[["count"]] > 0, ]
   }
   
   # format data to required columns
-  locus.allele <- strsplit(outputCIGAR.long[["pseudoCIGAR"]], ",")
-  outputCIGAR.long[["locus"]] <-
-    vapply(locus.allele, "[[", character(1), 1)
-  outputCIGAR.long[["allele"]] <-
-    vapply(locus.allele, "[[", character(1), 2)
-  outputCIGAR.long <-
-    outputCIGAR.long[, c("sample_id", "locus", "allele", "count")]
+  locus.allele <- strsplit(long[["pseudoCIGAR"]], ",")
+  long[["locus"]] <- vapply(locus.allele, "[[", character(1), 1)
+  long[["allele"]] <- vapply(locus.allele, "[[", character(1), 2)
   
-  outputCIGAR.long
+  long[, c("sample_id", "locus", "allele", "count")]
 }
 
 
-filter.outputCIGAR.long <-
-  function(
-    outputCIGAR.long,
-    minimum.count,
-    keep.marker = "microhaplotype"
-  ) {
-    
-    outputCIGAR.long <-
-      switch (
-        keep.marker,
-        microhaplotype = {
-          outputCIGAR.long[!grepl("MIT|DHPS|MDR1", outputCIGAR.long[["locus"]]), ]
-        },
-        drugR = {
-          outputCIGAR.long[grepl("DHPS|MDR1", outputCIGAR.long[["locus"]]), ]
-        },
-        mitochondria = {
-          outputCIGAR.long[grepl("MIT", outputCIGAR.long[["locus"]]), ]
-        },
-        stop("Valid options are 'microhaplotype', 'drugR', 'mitochondria'")
-      )
-    
-    outputCIGAR.long.counts.per.locus <-
-      aggregate(count ~ sample_id + locus, outputCIGAR.long, sum)
-    
-    pass.filter <-
-      outputCIGAR.long.counts.per.locus[
-        outputCIGAR.long.counts.per.locus[["count"]] >= minimum.count,
-        
-      ]
-    
-    outputCIGAR.long.filtered <-
-      merge(
-        outputCIGAR.long,
-        pass.filter[, c("sample_id", "locus")],
-        sort = FALSE
-      )
-    
-    outputCIGAR.long.filtered
-}
-
-
-calculate.remaining.nloci <- function(outputCIGAR.long.filtered) {
-  outputCIGAR.long.filtered.nloci.per.sample <-
-    aggregate(
-      locus ~ sample_id,
-      outputCIGAR.long.filtered,
-      function(x) length(unique(x))
+filter.long <- function(long, minimum.count, keep.marker = "microhaplotype") {
+  long <-
+    switch (
+      keep.marker,
+      microhaplotype = {
+        long[!grepl("MIT|DHPS|MDR1", long[["locus"]]), ]
+      },
+      drugR = {
+        long[grepl("DHPS|MDR1", long[["locus"]]), ]
+      },
+      mitochondria = {
+        long[grepl("MIT", long[["locus"]]), ]
+      },
+      stop("Valid options are 'microhaplotype', 'drugR', 'mitochondria'")
     )
-  names(outputCIGAR.long.filtered.nloci.per.sample)[2] <- "nloci"
   
-  outputCIGAR.long.filtered.nloci.per.sample
+  long.counts.per.locus <- aggregate(count ~ sample_id + locus, long, sum)
+  
+  pass.filter <-
+    long.counts.per.locus[long.counts.per.locus[["count"]] >= minimum.count, ]
+  
+  merge(long, pass.filter[, c("sample_id", "locus")], sort = FALSE)
 }
 
 
-plot.remaining.nloci <-
-  function(outputCIGAR.long.filtered.nloci.per.sample, minimum.nloci) {
-    plot(
-      sort(outputCIGAR.long.filtered.nloci.per.sample[["nloci"]]),
-      main = NA,
-      xlab = NA,
-      ylab = "Remaining number of locus",
-      xaxt = "n"
-    )
-    abline(h = minimum.nloci, col = "red", lty = "dashed")
+calculate.remaining.nloci <- function(long.filtered) {
+  long.filtered.nloci.per.sample <-
+    aggregate(locus ~ sample_id, long.filtered, function(x) length(unique(x)))
+  
+  names(long.filtered.nloci.per.sample)[2] <- "nloci"
+  
+  long.filtered.nloci.per.sample
+}
+
+
+plot.remaining.nloci <- function(long.filtered.nloci.per.sample, minimum.nloci) {
+  plot(
+    sort(long.filtered.nloci.per.sample[["nloci"]]),
+    main = NA,
+    xlab = NA,
+    ylab = "Remaining number of locus",
+    xaxt = "n"
+  )
+  
+  abline(h = minimum.nloci, col = "red", lty = "dashed")
 }
 
 
 filter.failed.samples <-
-  function(
-    outputCIGAR.long.filtered,
-    outputCIGAR.long.filtered.nloci.per.sample,
-    minimum.nloci
-  ) {
+  function(long.filtered, long.filtered.nloci.per.sample, minimum.nloci) {
     pass.samples <-
-      outputCIGAR.long.filtered.nloci.per.sample[
-        outputCIGAR.long.filtered.nloci.per.sample[["nloci"]] >= minimum.nloci,
+      long.filtered.nloci.per.sample[
+        long.filtered.nloci.per.sample[["nloci"]] >= minimum.nloci,
         "sample_id"
       ]
     
-    outputCIGAR.long.filtered.subset <-
-      outputCIGAR.long.filtered[
-        outputCIGAR.long.filtered[["sample_id"]] %in% pass.samples,
-        
-      ]
-    
-    outputCIGAR.long.filtered.subset
+    long.filtered[long.filtered[["sample_id"]] %in% pass.samples, ]
   }
 
 
@@ -129,37 +95,28 @@ filter.failed.samples <-
 outputCIGAR.file <- "location/to/outputCIGAR.tsv"
 
 outputCIGAR <- read.delim(outputCIGAR.file, check.names = FALSE)
-outputCIGAR.long <- outputCIGAR.to.long(outputCIGAR)
+long <- outputCIGAR.to.long(outputCIGAR)
 
 
-# FIXME: change to path of unfiltered microhaplotype data
-outputCIGAR.long.file <- "location/to/mhap_unfiltered.tsv"
+# FIXME: change to path of unfiltered data
+long.file <- "location/to/long_unfiltered.tsv"
 
-write.table(
-  outputCIGAR.long,
-  outputCIGAR.long.file,
-  quote = FALSE,
-  sep = "\t",
-  row.names = FALSE
-)
+write.table(long, long.file, quote = FALSE, sep = "\t", row.names = FALSE)
 
 
 # FIXME: change read-pair threshold for failed genotype
 minimum.count <- 25
 
-outputCIGAR.long.filtered <-
-  filter.outputCIGAR.long(outputCIGAR.long, minimum.count)
-
-outputCIGAR.long.filtered.nloci.per.sample <-
-  calculate.remaining.nloci(outputCIGAR.long.filtered)
+mhap.filtered <- filter.long(long, minimum.count, keep.marker = "microhaplotype")
+mhap.filtered.nloci.per.sample <- calculate.remaining.nloci(mhap.filtered)
 
 
 # FIXME: change to path for statistics on remaining locus (text)
-outputCIGAR.long.filtered.nloci.per.sample.text <- "location/to/mhap_filtered_nloci.tsv"
+mhap.filtered.nloci.per.sample.text <- "location/to/mhap_filtered_nloci.tsv"
 
 write.table(
-  outputCIGAR.long.filtered.nloci.per.sample,
-  outputCIGAR.long.filtered.nloci.per.sample.text,
+  mhap.filtered.nloci.per.sample,
+  mhap.filtered.nloci.per.sample.text,
   quote = FALSE,
   sep = "\t",
   row.names = FALSE
@@ -170,16 +127,16 @@ write.table(
 minimum.nloci <- 75
 
 # FIXME: change to path for statistics on remaining locus (figure)
-outputCIGAR.long.filtered.nloci.per.sample.figure <- "location/to/mhap_filtered_nloci.pdf"
+mhap.filtered.nloci.per.sample.figure <- "location/to/mhap_filtered_nloci.pdf"
 
-pdf(file = outputCIGAR.long.filtered.nloci.per.sample.figure)
-plot.remaining.nloci(outputCIGAR.long.filtered.nloci.per.sample, minimum.nloci)
+pdf(file = mhap.filtered.nloci.per.sample.figure)
+plot.remaining.nloci(mhap.filtered.nloci.per.sample, minimum.nloci)
 dev.off()
 
-outputCIGAR.long.filtered.subset <-
+mhap.filtered.subset <-
   filter.failed.samples(
-    outputCIGAR.long.filtered,
-    outputCIGAR.long.filtered.nloci.per.sample,
+    mhap.filtered,
+    mhap.filtered.nloci.per.sample,
     minimum.nloci
   )
 
@@ -188,11 +145,11 @@ outputCIGAR.long.filtered.subset <-
 
 
 # FIXME: change to path of filtered microhaplotype data
-outputCIGAR.long.filtered.subset.file <- "location/to/mhap_filtered.tsv"
+mhap.filtered.subset.file <- "location/to/mhap_filtered.tsv"
 
 write.table(
-  outputCIGAR.long.filtered.subset,
-  outputCIGAR.long.filtered.subset.file,
+  mhap.filtered.subset,
+  mhap.filtered.subset.file,
   quote = FALSE,
   sep = "\t",
   row.names = FALSE

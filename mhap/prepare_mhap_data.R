@@ -145,7 +145,7 @@ write.table(
 
 
 # FIXME: change read-pair threshold for failed genotype
-minimum.count <- 10
+minimum.count <- 25
 
 outputCIGAR.long.filtered <-
   filter.outputCIGAR.long(outputCIGAR.long, minimum.count)
@@ -167,7 +167,7 @@ write.table(
 
 
 # FIXME: change remaining locus threshold for failed samples
-minimum.nloci <- 80
+minimum.nloci <- 75
 
 # FIXME: change to path for statistics on remaining locus (figure)
 outputCIGAR.long.filtered.nloci.per.sample.figure <- "location/to/mhap_filtered_nloci.pdf"

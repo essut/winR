@@ -75,7 +75,7 @@ effective_coi_summary <-
 # FIXME: adjust name and size (in inches) of COI plot
 coi_plot_file <- "location/to/mhap_COI.pdf"
 
-pdf(file = coi_plot_file, width = 7, height = 7)
+pdf(file = coi_plot_file, width = 4, height = 4)
 
 ggplot(
   coi_summary,
@@ -97,7 +97,7 @@ polyclonal_prevalence <-
 # FIXME: adjust name and size (in inches) of polyclonal prevalence plot
 polyclonal_prevalence_plot_file <- "location/to/mhap_polyclonal_prevalence.pdf"
 
-pdf(file = polyclonal_prevalence_plot_file, width = 7, height = 7)
+pdf(file = polyclonal_prevalence_plot_file, width = 4, height = 4)
 
 ggplot(
   polyclonal_prevalence,
@@ -120,7 +120,7 @@ dev.off()
 # FIXME: adjust name and size (in inches) of effective COI plot
 effective_coi_plot_file <- "location/to/mhap_effective_COI.pdf"
 
-pdf(file = effective_coi_plot_file, width = 7, height = 7)
+pdf(file = effective_coi_plot_file, width = 4, height = 4)
 
 ggplot(
   effective_coi_summary,

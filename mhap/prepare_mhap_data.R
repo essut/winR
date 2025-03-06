@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-## Load all functions by running everything from line 4-88
+## Load all functions by running everything from line 4-101
 outputCIGAR.to.long <- function(outputCIGAR, keep.unused.alleles = FALSE) {
   long <-
     reshape(
@@ -25,6 +25,19 @@ outputCIGAR.to.long <- function(outputCIGAR, keep.unused.alleles = FALSE) {
   long[["allele"]] <- vapply(locus.allele, "[[", character(1), 2)
   
   long[, c("sample_id", "locus", "allele", "count")]
+}
+
+
+rmindel.allele <- function(long) {
+  # insertion pattern: {position}I={bases}
+  # deletion pattern: {position}D={bases}
+  long[["allele"]] <- gsub("([0-9]+)[DI]=([ACGT]+)", "", long[["allele"]])
+  
+  # default to wild type if all variants were removed
+  long[long[["allele"]] %in% "", "allele"] <- "."
+  
+  # consolidate allele counts after indel removal
+  aggregate(count ~ sample_id + locus + allele, long, sum)
 }
 
 
@@ -97,6 +110,8 @@ outputCIGAR.file <- "location/to/outputCIGAR.tsv"
 outputCIGAR <- read.delim(outputCIGAR.file, check.names = FALSE)
 long <- outputCIGAR.to.long(outputCIGAR)
 
+# FIXME: comment the line below if you want to keep insertions and deletions in alleles
+long <- rmindel.allele(long)
 
 # FIXME: change to path of unfiltered data
 long.file <- "location/to/long_unfiltered.tsv"

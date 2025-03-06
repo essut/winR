@@ -11,7 +11,7 @@ install.packages(pkgs, repos = c("https://eppicenter.r-universe.dev", "https://c
 This might take around 15 minutes to install everything :)
 
 Steps:
-1. prepare_mhap_data.R
+1. prepare_data.R
 2. run_MOIRE.R
 3. run_Dcifer.R
 4. plot_MOIRE.R

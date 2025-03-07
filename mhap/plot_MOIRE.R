@@ -3,22 +3,22 @@ library(readxl)
 library(ggplot2)
 
 ## Load all functions by running everything from line 6-28
-calculate_polyclonal_prevalence <- function(coi_summary, metadata_group_column) {
+calculate_polyclonal_prevalence <- function(polyclonal_status, metadata_group_column) {
   n_polyclonal <-
     aggregate(
-      coi_summary[["prob_polyclonal"]] > 0.5,
-      coi_summary[metadata_group_column],
+      polyclonal_status["is_polyclonal"],
+      polyclonal_status[metadata_group_column],
       sum
     )
   n_total <-
     aggregate(
-      coi_summary[["prob_polyclonal"]],
-      coi_summary[metadata_group_column],
+      polyclonal_status["is_polyclonal"],
+      polyclonal_status[metadata_group_column],
       length
     )
   
   polyclonal_prevalence <-
-    merge(n_polyclonal, n_total, by = metadata_group_column)
+    merge(n_polyclonal, n_total, by = metadata_group_column, sort = FALSE)
   names(polyclonal_prevalence)[2:3] <- c("n_polyclonal", "n_total")
   
   polyclonal_prevalence[["pc_polyclonal"]] <-
@@ -43,6 +43,11 @@ coi_summary_file <- "location/to/mhap_COI_summary.tsv"
 
 coi_summary <- read.delim(coi_summary_file)
 
+# FIXME: change to path of polyclonal status
+polyclonal_status_file <- "location/to/mhap_polyclonal_status.tsv"
+
+polyclonal_status <- read.delim(polyclonal_status_file)
+
 # FIXME: change to path of effective COI summary
 effective_coi_summary_file <- "location/to/mhap_effective_COI_summary.tsv"
 
@@ -56,6 +61,14 @@ metadata_group_column <- "Year"
 coi_summary <-
   merge(
     coi_summary,
+    metadata,
+    by.x = "sample_id",
+    by.y = metadata_sample_column
+  )
+
+polyclonal_status <-
+  merge(
+    polyclonal_status,
     metadata,
     by.x = "sample_id",
     by.y = metadata_sample_column
@@ -91,8 +104,18 @@ ggplot(
 dev.off()
 
 
+# FIXME: path to polyclonal prevalence statistics
+polyclonal_prevalence_file <- "location/to/mhap_polyclonal_prevalence.tsv"
+
 polyclonal_prevalence <-
-  calculate_polyclonal_prevalence(coi_summary, metadata_group_column)
+  calculate_polyclonal_prevalence(polyclonal_status, metadata_group_column)
+write.table(
+  polyclonal_prevalence,
+  polyclonal_prevalence_file,
+  quote = FALSE,
+  sep = "\t",
+  row.names = FALSE
+)
 
 # FIXME: adjust name and size (in inches) of polyclonal prevalence plot
 polyclonal_prevalence_plot_file <- "location/to/mhap_polyclonal_prevalence.pdf"
@@ -112,7 +135,7 @@ ggplot(
   xlab(metadata_group_column) +
   ylab("% polyclonal") +
   theme_classic() +
-  geom_text(nudge_y = 2)
+  geom_text(nudge_y = 3)
 
 dev.off()
 

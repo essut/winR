@@ -41,13 +41,15 @@ mall.estimate.meta <-
   )
 
 
-mall.estimate.meta <-
+mall.estimate.meta.within <-
   mall.estimate.meta[
     mall.estimate.meta[[paste0(metadata.group.column, ".x")]] ==
       mall.estimate.meta[[paste0(metadata.group.column, ".y")]],
     
   ]
 
+mall.estimate.meta.within[[metadata.group.column]] <-
+  mall.estimate.meta.within[[paste0(metadata.group.column, ".x")]]
 
 # FIXME: adjust name and size (in inches) of between-infection relatedness plot
 between.relatedness.plot.file <- "location/to/mhap_between_relatedness.pdf"
@@ -55,8 +57,8 @@ between.relatedness.plot.file <- "location/to/mhap_between_relatedness.pdf"
 pdf(file = between.relatedness.plot.file, width = 4, height = 4)
 
 ggplot(
-  mall.estimate.meta,
-  aes(x = as.factor(.data[[paste0(metadata.group.column, ".x")]]), y = relatedness)
+  mall.estimate.meta.within,
+  aes(x = as.factor(.data[[metadata.group.column]]), y = relatedness)
 ) +
   geom_boxplot(outlier.shape = NA) +
   geom_jitter(width = 0.35, height = 0, alpha = 0.5) +
@@ -85,15 +87,19 @@ cols <- palette.colors(palette = "Okabe-Ito")
 
 palette <- setNames(cols[1:nlevels(x)], levels(x))
 
-g <- network(mall.estimate, directed = FALSE, vertices = metadata)
+g <- mall.estimate.meta[, c("sample_id1", "sample_id2", "relatedness")]
 
 for (IBD.threshold in IBD.thresholds) {
-  net <- network.copy(g)
+  
+  net <- network(g, directed = FALSE)
+  delete.edges(net, which(get.edge.value(net, "relatedness") < IBD.threshold))
+  
+  net <- ggnetwork(net)
   net <-
-    delete.edges(net, which(get.edge.value(net, "relatedness") < IBD.threshold))
+    merge(net, metadata, by.x = "vertex.names", by.y = metadata.sample.column)
 
   # FIXME: adjust size (in inches) of network plot
-  pdf(paste0(prefix.filename, "_", IBD.threshold, ".pdf"), width = 7, height = 7.5)
+  pdf(paste0(prefix.filename, "_", IBD.threshold, ".pdf"), width = 6, height = 7)
   
   # FIXME: relatedness network framework, adjust metadata as necessary
   print(

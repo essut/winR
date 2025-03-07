@@ -3,7 +3,7 @@ library(readxl)
 library(ape)
 library(ggplot2)
 
-## Load all functions by running everything from line 7-149
+## Load all functions by running everything from line 7-151
 create.allele.matrix <- function(dlong) {
   # calls the major allele in each locus for each sample
   dlong.major <-
@@ -166,8 +166,18 @@ sfile <- "location/to/mhap_filtered.tsv"
 
 dlong <- read.delim(sfile)
 
-## STOP and make sure the metadata ID and the sample_id matches
+# FIXME: change to path of polyclonal status
+polyclonal.status.file <- "location/to/mhap_polyclonal_status.tsv"
 
+polyclonal.status <- read.delim(polyclonal.status.file)
+
+## filter to monoclonal samples
+dlong <-
+  dlong[
+    dlong[["sample_id"]] %in%
+      polyclonal.status[!polyclonal.status[["is_polyclonal"]], "sample_id"],
+    
+    ]
 
 dlong.major.wide <- create.allele.matrix(dlong)
 dlong.major.wide.missingness <- calculate.missingness(dlong.major.wide)
@@ -180,12 +190,12 @@ get.usable.markers(dlong.major.wide.missingness)
 
 
 # FIXME: set a cutoff to remove as many missing locus as possible
-missing.sample.per.locus.cutoff <- 0
+missing.sample.per.locus.cutoff <- 5
 
 # FIXME: change to path for missing sample per locus
 missing.sample.per.locus.plot.file <- "location/to/mhap_missing_sample_per_locus.pdf"
 
-pdf(file = missing.sample.per.locus.plot.file, width = 7, height = 7)
+pdf(file = missing.sample.per.locus.plot.file)
 plot.missing.sample.per.locus(
   dlong.major.wide.missingness,
   missing.sample.per.locus.cutoff
@@ -219,7 +229,7 @@ missing.locus.per.sample.cutoff <- 0
 # FIXME: change to path for missing locus per sample
 missing.locus.per.sample.plot.file <- "location/to/mhap_missing_locus_per_sample.pdf"
 
-pdf(file = missing.locus.per.sample.plot.file, width = 7, height = 7)
+pdf(file = missing.locus.per.sample.plot.file)
 plot.missing.locus.per.sample(
   dlong.major.wide.locfilt.missingness,
   missing.locus.per.sample.cutoff

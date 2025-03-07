@@ -263,6 +263,17 @@ dist <- dist.gene(dlong.major.wide.locfilt.samfilt)
 metadata.sample.column <- "ID"
 metadata.group.column <- "Year"
 
+z <- as.factor(metadata[[metadata.group.column]])
+
+# FIXME: select the colour palette according to the number of groups
+# The "Okabe-Ito" colour palette can accommodate up to 10 groups (default)
+# The "Polychrome 36" colour palette can accommodate up to 36 groups
+# You can also specify your own colour palette to use
+nlevels(z)
+cols <- palette.colors(palette = "Okabe-Ito")
+
+palette <- setNames(cols[1:nlevels(z)], levels(z))
+
 
 ## lines below create PCoA plots
 
@@ -280,12 +291,6 @@ data <-
   )
 
 
-# "default" colour palettes, can accommodate up to 30 groups
-cols <- palette.colors(palette = "Polychrome 36")[-(1:2)]
-x <- as.factor(metadata[[metadata.group.column]])
-palette <- setNames(cols[1:nlevels(x)], levels(x))
-
-
 # FIXME: determine path to save PCoA plots
 PCoA.prefix.filename <- "location/to/mhap_PCoA"
 
@@ -298,7 +303,7 @@ for (j in seq_len(ncol(m))) {
   y <- m[2, j]
   
   # FIXME: adjust size (in inches) of PCoA plot
-  pdf(paste0(PCoA.prefix.filename, "_", x, "_", y, ".pdf"), width = 7, height = 7.5)
+  pdf(paste0(PCoA.prefix.filename, "_", x, "_", y, ".pdf"), width = 5, height = 5)
   
   # FIXME: adjust PCoA framework as required
   print(
@@ -310,13 +315,14 @@ for (j in seq_len(ncol(m))) {
         colour = as.factor(.data[[metadata.group.column]])
       )
     ) +
-      geom_point(alpha = 0.8, size = 5) +
+      geom_point(alpha = 0.7, size = 4) +
       theme_classic() +
       labs(colour = metadata.group.column) +
       theme(legend.position = "bottom") +
       xlab(paste0("Coordinate ", x, " (", round(Broken_stick[x], digits = 2), "%)")) +
       ylab(paste0("Coordinate ", y, " (", round(Broken_stick[y], digits = 2), "%)")) +
-      scale_colour_manual(values = palette)
+      scale_colour_manual(values = palette) +
+      guides(colour = guide_legend(override.aes = list(alpha = 1)))
   )
   
   dev.off()
@@ -324,17 +330,14 @@ for (j in seq_len(ncol(m))) {
 
 
 ## lines below create NJ plots
-# "default" colour palettes, can accommodate up to 30 groups
-cols <- palette.colors(palette = "Polychrome 36")[-(1:2)]
-x <- as.factor(metadata[[metadata.group.column]])
-palette <- setNames(cols[1:nlevels(x)], levels(x))
-
 tr <- nj(dist)
 cls <- setNames(metadata[[metadata.group.column]], metadata[[metadata.sample.column]])
 tip.groups <- cls[tr[["tip.label"]]]
 
 tip.colours <- palette[as.character(tip.groups)]
 edge.colours <- group.NJ(tr, tip.colours, "#E5E4E2")
+## if the script hangs at edge.colours,
+## there is probably a sample with no available metadata
 
 
 # FIXME: determine path to save NJ plots
@@ -358,11 +361,11 @@ plot(
 
 legend(
   "bottom",
-  levels(x),
+  levels(z),
   fill = palette,
-  horiz = TRUE,
+  ncol = 4,
   title = metadata.group.column,
-  inset = -0.15
+  inset = -0.17
 )
 
 dev.off()
@@ -384,11 +387,11 @@ plot(
 
 legend(
   "bottom",
-  levels(x),
+  levels(z),
   fill = palette,
-  horiz = TRUE,
+  ncol = 4,
   title = metadata.group.column,
-  inset = -0.15
+  inset = -0.17
 )
 
 dev.off()

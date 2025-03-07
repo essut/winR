@@ -52,7 +52,7 @@ mall.estimate.meta <-
 # FIXME: adjust name and size (in inches) of between-infection relatedness plot
 between.relatedness.plot.file <- "location/to/mhap_between_relatedness.pdf"
 
-pdf(file = between.relatedness.plot.file, width = 7, height = 7)
+pdf(file = between.relatedness.plot.file, width = 4, height = 4)
 
 ggplot(
   mall.estimate.meta,
@@ -62,6 +62,7 @@ ggplot(
   geom_jitter(width = 0.35, height = 0, alpha = 0.5) +
   ylim(0, 1) +
   xlab(metadata.group.column) +
+  ylab("between relatedness") +
   theme_classic()
 
 dev.off()
@@ -73,9 +74,15 @@ IBD.thresholds <- c(1, 1/2, 1/4, 1/8) * 0.95
 # FIXME: determine path to save plots
 prefix.filename <- "location/to/mhap_network"
 
-# "default" colour palettes, can accommodate up to 30 groups
-cols <- palette.colors(palette = "Polychrome 36")[-(1:2)]
 x <- as.factor(metadata[[metadata.group.column]])
+
+# FIXME: select the colour palette according to the number of groups
+# The "Okabe-Ito" colour palette can accommodate up to 10 groups (default)
+# The "Polychrome 36" colour palette can accommodate up to 36 groups
+# You can also specify your own colour palette to use
+nlevels(x)
+cols <- palette.colors(palette = "Okabe-Ito")
+
 palette <- setNames(cols[1:nlevels(x)], levels(x))
 
 g <- network(mall.estimate, directed = FALSE, vertices = metadata)

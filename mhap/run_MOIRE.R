@@ -32,6 +32,24 @@ write.table(
 )
 
 
+# FIXME: change to path of polyclonal status
+polyclonal_status_file <- "location/to/mhap_polyclonal_status.tsv"
+
+polyclonal_status <-
+  data.frame(
+    sample_id = coi_summary[["sample_id"]],
+    is_polyclonal = coi_summary[["prob_polyclonal"]] >= 0.5
+  )
+
+write.table(
+  polyclonal_status,
+  polyclonal_status_file,
+  quote = FALSE,
+  sep = "\t",
+  row.names = FALSE
+)
+
+
 # FIXME: change to path of effective COI summary
 effective_coi_summary_file <- "location/to/mhap_effective_COI_summary.tsv"
 

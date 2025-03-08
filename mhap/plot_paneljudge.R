@@ -13,11 +13,11 @@ diversities <- read.delim(diversities.file)
 # FIXME: adjust name and size (in inches) of paneljudge diversities plot
 diversities.plot.file <- "location/to/mhap_paneljudge_diversities.pdf"
 
-pdf(file = diversities.plot.file, width = 7, height = 7)
+pdf(file = diversities.plot.file, width = 4, height = 4)
 
 ggplot(diversities, aes(x = as.factor(.data[[metadata.group.column]]), y = diversity)) +
   geom_boxplot(outlier.shape = NA) +
-  geom_jitter(width = 0.35, height = 0, alpha = 0.5) +
+  geom_jitter(width = 0.3, height = 0, alpha = 0.5) +
   ylim(0, 1) +
   xlab(metadata.group.column) +
   ylab("Diversity") +
@@ -34,11 +34,11 @@ eff.cardinalities <- read.delim(eff.cardinalities.file)
 # FIXME: adjust name and size (in inches) of paneljudge effective cardinalities plot
 eff.cardinalities.plot.file <- "location/to/mhap_paneljudge_eff_cardinalities.pdf"
 
-pdf(file = eff.cardinalities.plot.file, width = 7, height = 7)
+pdf(file = eff.cardinalities.plot.file, width = 4, height = 4)
 
 ggplot(eff.cardinalities, aes(x = as.factor(.data[[metadata.group.column]]), y = eff_cardinality)) +
   geom_boxplot(outlier.shape = NA) +
-  geom_jitter(width = 0.35, height = 0, alpha = 0.5) +
+  geom_jitter(width = 0.3, height = 0, alpha = 0.5) +
   xlab(metadata.group.column) +
   ylab("Effective Cardinality") +
   theme_classic()
@@ -62,7 +62,7 @@ names(rmse.krhats)[length(rmse.krhats)] <- "RMSE"
 # FIXME: adjust name and size (in inches) of paneljudge k and r estimates plot
 krhats.plot.file <- "location/to/mhap_paneljudge_k_r_estimates.pdf"
 
-pdf(file = krhats.plot.file, width = 7, height = 7)
+pdf(file = krhats.plot.file, width = 6, height = 4)
 
 ggplot(rmse.krhats, aes(x = r, y = RMSE)) +
   facet_wrap(metadata.group.column, scales = "free_y") +

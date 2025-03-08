@@ -254,6 +254,19 @@ sfile <- "location/to/mhap_filtered.tsv"
 
 dlong <- read.delim(sfile)
 
+# FIXME: change to path of polyclonal status
+polyclonal.status.file <- "location/to/mhap_polyclonal_status.tsv"
+
+polyclonal.status <- read.delim(polyclonal.status.file)
+
+## filter to monoclonal samples
+dlong <-
+  dlong[
+    dlong[["sample_id"]] %in%
+      polyclonal.status[!polyclonal.status[["is_polyclonal"]], "sample_id"],
+    
+  ]
+
 
 # FIXME: change according sample and group column in metadata
 metadata.sample.column <- "ID"

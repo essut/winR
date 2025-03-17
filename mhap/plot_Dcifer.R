@@ -71,7 +71,10 @@ dev.off()
 
 
 # FIXME: adjust the IBD thresholds as needed
-IBD.thresholds <- c(1, 1/2, 1/4, 1/8) * 0.95
+IBD.thresholds <- c(1, 1/2, 1/4, 1/8, 1/16) * 0.95
+
+# make sure the IBD thresholds are in decreasing order
+IBD.thresholds <- sort(IBD.thresholds, decreasing = TRUE)
 
 # FIXME: determine path to save plots
 prefix.filename <- "location/to/mhap_network"
@@ -79,37 +82,61 @@ prefix.filename <- "location/to/mhap_network"
 x <- as.factor(metadata[[metadata.group.column]])
 
 # FIXME: select the colour palette according to the number of groups
-# The "Okabe-Ito" colour palette can accommodate up to 10 groups (default)
+# The "Okabe-Ito" colour palette can accommodate up to 9 groups (default)
 # The "Polychrome 36" colour palette can accommodate up to 36 groups
 # You can also specify your own colour palette to use
 nlevels(x)
-cols <- palette.colors(palette = "Okabe-Ito")
+
+# exclude black from Okabe-Ito palette
+cols <- palette.colors(palette = "Okabe-Ito")[-1]
 
 palette <- setNames(cols[1:nlevels(x)], levels(x))
 
 g <- mall.estimate.meta[, c("sample_id1", "sample_id2", "relatedness")]
 
-for (IBD.threshold in IBD.thresholds) {
+for (i in seq_along(IBD.thresholds)) {
+  IBD.threshold <- IBD.thresholds[i]
   
   net <- network(g, directed = FALSE)
   delete.edges(net, which(get.edge.value(net, "relatedness") < IBD.threshold))
   
   net <- ggnetwork(net)
   net <-
-    merge(net, metadata, by.x = "vertex.names", by.y = metadata.sample.column)
+    merge(net, metadata, by.x = "vertex.names", by.y = metadata.sample.column, sort = FALSE)
+  
+  # sort by relatedness to emphasize close relationships
+  net <- net[order(net[["relatedness"]]), ]
+  
+  threshold.index <- i - 1
 
   # FIXME: adjust size (in inches) of network plot
-  pdf(paste0(prefix.filename, "_", IBD.threshold, ".pdf"), width = 6, height = 7)
+  pdf(paste0(prefix.filename, "_", IBD.threshold, ".pdf"), width = 9, height = 8)
   
   # FIXME: relatedness network framework, adjust metadata as necessary
   print(
     ggplot(net, aes(x, y, xend = xend, yend = yend, fill = as.factor(.data[[metadata.group.column]]))) +
-      geom_edges(linewidth = 0.2) +
+      geom_edges(aes(colour = relatedness, linewidth = relatedness)) +
       geom_nodes(size = 5, shape = 21) +
       theme_blank() +
-      labs(title = IBD.threshold, fill = metadata.group.column) +
-      theme(legend.position = "bottom") +
-      scale_fill_manual(values = palette)
+      labs(title = paste0(IBD.threshold * 100, "%"), fill = metadata.group.column) +
+      guides(linewidth = "none") +
+      scale_fill_manual(values = palette) +
+      # using low and high colours of Greys palette from ColorBrewer
+      scale_colour_binned(
+        name = "IBD",
+        breaks = rev(IBD.thresholds[1:threshold.index]),
+        labels = rev(paste0(IBD.thresholds[1:threshold.index] * 100, "%")),
+        limits = c(0, 1),
+        low = "#F0F0F0",
+        high = "#252525"
+      ) +
+      scale_linewidth_binned(
+        name = "IBD",
+        breaks = rev(IBD.thresholds[1:threshold.index]),
+        labels = rev(paste0(IBD.thresholds[1:threshold.index] * 100, "%")),
+        limits = c(0, 1),
+        range = c(0.5, 4)
+      )
   )
   
   dev.off()

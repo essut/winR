@@ -70,24 +70,18 @@ ggplot(
 dev.off()
 
 
-x <- as.factor(metadata[[metadata.group.column]])
+z <- as.factor(metadata[[metadata.group.column]])
 
 # FIXME: select the colour palette according to the number of groups
 # The "Okabe-Ito" colour palette can accommodate up to 9 groups (default)
 # The "Polychrome 36" colour palette can accommodate up to 36 groups
 # You can also specify your own colour palette to use
-nlevels(x)
+nlevels(z)
 
 # exclude black from Okabe-Ito palette
 cols <- palette.colors(palette = "Okabe-Ito")[-1]
 
-palette <- setNames(cols[1:nlevels(x)], levels(x))
-
-g <-
-  network(
-    mall.estimate.meta[, c("sample_id1", "sample_id2", "relatedness")],
-    directed = FALSE
-  )
+palette <- setNames(cols[1:nlevels(z)], levels(z))
 
 # FIXME: determine path to save plots
 prefix.filename <- "location/to/mhap_network"
@@ -97,6 +91,12 @@ IBD.thresholds <- c(1, 1/2, 1/4, 1/8, 1/16) * 0.95
 
 # make sure the IBD thresholds are in decreasing order
 IBD.thresholds <- sort(IBD.thresholds, decreasing = TRUE)
+
+g <-
+  network(
+    mall.estimate.meta[, c("sample_id1", "sample_id2", "relatedness")],
+    directed = FALSE
+  )
 
 for (i in seq_along(IBD.thresholds)) {
   IBD.threshold <- IBD.thresholds[i]
@@ -127,7 +127,7 @@ for (i in seq_along(IBD.thresholds)) {
       theme_blank() +
       labs(title = paste0(IBD.threshold * 100, "%"), fill = metadata.group.column) +
       guides(linewidth = "none") +
-      scale_fill_manual(values = palette) +
+      scale_fill_manual(breaks = levels(z), values = palette) +
       # using low and high colours of Greys palette from ColorBrewer
       scale_colour_binned(
         name = "IBD",

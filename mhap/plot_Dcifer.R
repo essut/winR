@@ -83,7 +83,11 @@ cols <- palette.colors(palette = "Okabe-Ito")[-1]
 
 palette <- setNames(cols[1:nlevels(x)], levels(x))
 
-g <- mall.estimate.meta[, c("sample_id1", "sample_id2", "relatedness")]
+g <-
+  network(
+    mall.estimate.meta[, c("sample_id1", "sample_id2", "relatedness")],
+    directed = FALSE
+  )
 
 # FIXME: determine path to save plots
 prefix.filename <- "location/to/mhap_network"
@@ -97,7 +101,7 @@ IBD.thresholds <- sort(IBD.thresholds, decreasing = TRUE)
 for (i in seq_along(IBD.thresholds)) {
   IBD.threshold <- IBD.thresholds[i]
   
-  net <- network(g, directed = FALSE)
+  net <- network.copy(g)
   delete.edges(net, which(get.edge.value(net, "relatedness") < IBD.threshold))
   
   # make plots reproducible

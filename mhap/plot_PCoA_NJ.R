@@ -266,11 +266,13 @@ metadata.group.column <- "Year"
 z <- as.factor(metadata[[metadata.group.column]])
 
 # FIXME: select the colour palette according to the number of groups
-# The "Okabe-Ito" colour palette can accommodate up to 10 groups (default)
+# The "Okabe-Ito" colour palette can accommodate up to 9 groups (default)
 # The "Polychrome 36" colour palette can accommodate up to 36 groups
 # You can also specify your own colour palette to use
 nlevels(z)
-cols <- palette.colors(palette = "Okabe-Ito")
+
+# exclude black from Okabe-Ito palette
+cols <- palette.colors(palette = "Okabe-Ito")[-1]
 
 palette <- setNames(cols[1:nlevels(z)], levels(z))
 
@@ -321,7 +323,7 @@ for (j in seq_len(ncol(m))) {
       theme(legend.position = "bottom") +
       xlab(paste0("Coordinate ", x, " (", round(Broken_stick[x], digits = 2), "%)")) +
       ylab(paste0("Coordinate ", y, " (", round(Broken_stick[y], digits = 2), "%)")) +
-      scale_colour_manual(values = palette) +
+      scale_colour_manual(breaks = levels(z), values = palette) +
       guides(colour = guide_legend(override.aes = list(alpha = 1)))
   )
   

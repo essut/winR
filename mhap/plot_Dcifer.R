@@ -70,15 +70,6 @@ ggplot(
 dev.off()
 
 
-# FIXME: adjust the IBD thresholds as needed
-IBD.thresholds <- c(1, 1/2, 1/4, 1/8, 1/16) * 0.95
-
-# make sure the IBD thresholds are in decreasing order
-IBD.thresholds <- sort(IBD.thresholds, decreasing = TRUE)
-
-# FIXME: determine path to save plots
-prefix.filename <- "location/to/mhap_network"
-
 x <- as.factor(metadata[[metadata.group.column]])
 
 # FIXME: select the colour palette according to the number of groups
@@ -94,13 +85,25 @@ palette <- setNames(cols[1:nlevels(x)], levels(x))
 
 g <- mall.estimate.meta[, c("sample_id1", "sample_id2", "relatedness")]
 
+# FIXME: determine path to save plots
+prefix.filename <- "location/to/mhap_network"
+
+# FIXME: adjust the IBD thresholds as needed
+IBD.thresholds <- c(1, 1/2, 1/4, 1/8, 1/16) * 0.95
+
+# make sure the IBD thresholds are in decreasing order
+IBD.thresholds <- sort(IBD.thresholds, decreasing = TRUE)
+
 for (i in seq_along(IBD.thresholds)) {
   IBD.threshold <- IBD.thresholds[i]
   
   net <- network(g, directed = FALSE)
   delete.edges(net, which(get.edge.value(net, "relatedness") < IBD.threshold))
   
+  # make plots reproducible
+  set.seed(1)
   net <- ggnetwork(net)
+  
   net <-
     merge(net, metadata, by.x = "vertex.names", by.y = metadata.sample.column, sort = FALSE)
   

@@ -36,7 +36,12 @@ get.m1.estimate <- function(dres0) {
 
 analyse.significantly.related.samples <-
   function(dsmp, coi, afreq, dres0, alpha = 0.05) {
-    isig <- which(dres0[, , "p_value"] <= alpha, arr.ind = TRUE)[, 2:1] 
+    isig <- which(dres0[, , "p_value"] <= alpha, arr.ind = TRUE)[, 2:1]
+    
+    # if no significant relatedness found
+    if (nrow(isig) == 0) {
+      return(NULL)
+    }
     
     revals <- mapply(generateReval, 1:5, nr = c(1e3, 1e2, 32, 16, 12))
     
@@ -60,7 +65,11 @@ analyse.significantly.related.samples <-
 
 
 calculate.overall.relatedness.estimate <- function(m1.estimate, sig, coi) {
-  mall.estimate <- merge(m1.estimate, sig, all = TRUE)
+  if (is.null(sig)) {
+    mall.estimate <- cbind(m1.estimate, M = NA, rtotal = NA)
+  } else {
+    mall.estimate <- merge(m1.estimate, sig, all = TRUE)
+  }
   
   coi.df <-
     data.frame(

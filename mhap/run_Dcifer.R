@@ -43,8 +43,6 @@ analyse.significantly.related.samples <-
       return(NULL)
     }
     
-    revals <- mapply(generateReval, 1:5, nr = c(1e3, 1e2, 32, 16, 12))
-    
     sig2 <- vector("list", nrow(isig))
     for (i in 1:nrow(isig)) {
       sig2[[i]] <- ibdEstM(dsmp[isig[i, ]], coi[isig[i, ]], afreq, equalr = TRUE)

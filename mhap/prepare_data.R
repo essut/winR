@@ -120,7 +120,7 @@ write.table(long, long.file, quote = FALSE, sep = "\t", row.names = FALSE)
 
 
 # FIXME: change read-pair threshold for failed genotype
-minimum.count <- 25
+minimum.count <- 10
 
 mhap.filtered <- filter.long(long, minimum.count, keep.marker = "microhaplotype")
 mhap.filtered.nloci.per.sample <- calculate.remaining.nloci(mhap.filtered)
@@ -139,7 +139,7 @@ write.table(
 
 
 # FIXME: change remaining locus threshold for failed samples
-minimum.nloci <- 75
+minimum.nloci <- 75 # ~80% markers
 
 # FIXME: change to path for statistics on remaining locus (figure)
 mhap.filtered.nloci.per.sample.figure <- "location/to/mhap_filtered_nloci.pdf"

@@ -41,22 +41,24 @@ rmindel.allele <- function(long) {
 }
 
 
-filter.long <- function(long, minimum.count, keep.marker = "microhaplotype") {
-  long <-
-    switch (
-      keep.marker,
-      microhaplotype = {
-        long[!grepl("MIT|DHPS|MDR1", long[["locus"]]), ]
-      },
-      drugR = {
-        long[grepl("DHPS|MDR1", long[["locus"]]), ]
-      },
-      mitochondria = {
-        long[grepl("MIT", long[["locus"]]), ]
-      },
-      stop("Valid options are 'microhaplotype', 'drugR', 'mitochondria'")
-    )
-  
+select.markers <- function(long, keep.marker = "microhaplotype") {
+  switch (
+    keep.marker,
+    microhaplotype = {
+      long[!grepl("MIT|DHPS|MDR1", long[["locus"]]), ]
+    },
+    drugR = {
+      long[grepl("DHPS|MDR1", long[["locus"]]), ]
+    },
+    mitochondria = {
+      long[grepl("MIT", long[["locus"]]), ]
+    },
+    stop("Valid options are 'microhaplotype', 'drugR', 'mitochondria'")
+  )
+}
+
+
+filter.long <- function(long, minimum.count) {
   long.counts.per.locus <- aggregate(count ~ sample_id + locus, long, sum)
   
   pass.filter <-
@@ -122,7 +124,8 @@ write.table(long, long.file, quote = FALSE, sep = "\t", row.names = FALSE)
 # FIXME: change read-pair threshold for failed genotype
 minimum.count <- 10
 
-mhap.filtered <- filter.long(long, minimum.count, keep.marker = "microhaplotype")
+mhap <- select.markers(long, keep.marker = "microhaplotype")
+mhap.filtered <- filter.long(long, minimum.count)
 mhap.filtered.nloci.per.sample <- calculate.remaining.nloci(mhap.filtered)
 
 

@@ -58,11 +58,16 @@ select.markers <- function(long, keep.marker = "microhaplotype") {
 }
 
 
-filter.long <- function(long, minimum.count) {
+allele.count.filter <- function(long, allele.count.cutoff) {
+  long[long[["count"]] >= allele.count.cutoff, ]
+}
+
+
+minimum.total.filter <- function(long, minimum.total.cutoff) {
   long.counts.per.locus <- aggregate(count ~ sample_id + locus, long, sum)
   
   pass.filter <-
-    long.counts.per.locus[long.counts.per.locus[["count"]] >= minimum.count, ]
+    long.counts.per.locus[long.counts.per.locus[["count"]] >= minimum.total.cutoff, ]
   
   merge(long, pass.filter[, c("sample_id", "locus")], sort = FALSE)
 }
@@ -122,10 +127,13 @@ write.table(long, long.file, quote = FALSE, sep = "\t", row.names = FALSE)
 
 
 # FIXME: change read-pair threshold for failed genotype
-minimum.count <- 10
+allele.count.cutoff <- 5 # at least 5 read-pairs needed for each allele
+minimum.total.cutoff <- 10 # at least 10 read-pairs in total per locus per sample
 
+# FIXME: comment any lines below to disable certain filters
 mhap <- select.markers(long, keep.marker = "microhaplotype")
-mhap.filtered <- filter.long(long, minimum.count)
+mhap.filtered <- allele.count.filter(mhap, allele.count.cutoff)
+mhap.filtered <- minimum.total.filter(mhap.filtered, minimum.total.cutoff)
 mhap.filtered.nloci.per.sample <- calculate.remaining.nloci(mhap.filtered)
 
 

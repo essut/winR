@@ -97,14 +97,14 @@ data <- moire::load_long_form_data(df)
 
 
 # these default parameters can be adjusted accordingly:
-# burn-in = 200 [burnin], total number of samples = 100,000
-# in my testing, a thread can handle 4 chains
-# if I dedicate 10 threads [pt_num_threads], I can run 40 chains [pt_chains]
-# so in the end, 2,500 samples per chain [samples_per_chain]
+# burn-in = 200 [burnin], samples per chain = 10,000 [samples_per_chain]
+# parallel tempering chains = 40 [pt_chains]
+# adjust the number of threads [pt_num_threads] accordingly
+## You might want to start with 1,000 samples per chain before committing to a larger value
 burnin <- 200
 pt_num_threads <- 10
-pt_chains <- pt_num_threads * 4
-samples_per_chain <- 100000 / pt_chains
+pt_chains <- 40
+samples_per_chain <- 10000
 
 mcmc_results <-
   moire::run_mcmc(

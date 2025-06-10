@@ -132,13 +132,15 @@ dev.off()
 ## STOP and determine the appropriate burn-in and sample parameters
 
 
-# in this example, it was determined that the best parameters were:
-# burn-in = 200, total number of samples = 40000
-# running 40 chains (samples per chain = 1000) on 10 threads in parallel
+# these default parameters can be adjusted accordingly:
+# burn-in = 200 [burnin], total number of samples = 100,000
+# in my testing, a thread can handle 4 chains
+# if I dedicate 10 threads [pt_num_threads], I can run 40 chains [pt_chains]
+# so in the end, 2,500 samples per chain [samples_per_chain]
 burnin <- 200
-pt_chains <- 40
-samples_per_chain <- 40000 / pt_chains
-pt_num_threads <- pt_chains / 4
+pt_num_threads <- 10
+pt_chains <- pt_num_threads * 4
+samples_per_chain <- 100000 / pt_chains
 
 mcmc_results <-
   moire::run_mcmc(

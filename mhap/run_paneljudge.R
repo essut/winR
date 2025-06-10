@@ -356,15 +356,15 @@ write.table(
 ## perform the lines below if confidence intervals are needed
 ## this might take a while to perform
 
-# FIXME: change to path of estimates of k and r with confidence intervals
-krhats.CIs.file <- "location/to/mhap_paneljudge_k_r_estimates_CIs.tsv"
-
-krhats.CIs <- compute.r.and.k.CIs(frequencies, metadata.group.column, markers, krhats)
-
-write.table(
-  krhats.CIs,
-  krhats.CIs.file,
-  quote = FALSE,
-  sep = "\t",
-  row.names = FALSE
-)
+# # FIXME: change to path of estimates of k and r with confidence intervals
+# krhats.CIs.file <- "location/to/mhap_paneljudge_k_r_estimates_CIs.tsv"
+# 
+# krhats.CIs <- compute.r.and.k.CIs(frequencies, metadata.group.column, markers, krhats)
+# 
+# write.table(
+#   krhats.CIs,
+#   krhats.CIs.file,
+#   quote = FALSE,
+#   sep = "\t",
+#   row.names = FALSE
+# )

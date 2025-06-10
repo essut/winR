@@ -89,49 +89,6 @@ df <- read.delim(sfile)
 data <- moire::load_long_form_data(df)
 
 
-# defaults to 4 chains, 1000 burn-in, 1000 sample
-initial_mcmc <- run_initial_mcmc(data)
-
-## produce MCMC diagnostics for assessment (initial), see:
-## https://sbfnk.github.io/mfiidd/mcmc_diagnostics.html
-initial_nchain <- length(initial_mcmc[["chains"]])
-initial_m <- ceiling(sqrt(initial_nchain))
-
-# FIXME: change to path of posterior (burn-in) trace plot (initial)
-initial_posterior_burnin_trace_plot_file <- "location/to/mhap_MOIRE_initial_posterior_burnin_trace.pdf"
-pdf(file = initial_posterior_burnin_trace_plot_file, width = 7, height = 7)
-
-par(mfrow = c(initial_m, initial_m))
-plot.posterior.burnin.trace(initial_mcmc)
-dev.off()
-
-# FIXME: change to path of posterior (sample) trace plot (initial)
-initial_posterior_sample_trace_plot_file <- "location/to/mhap_MOIRE_initial_posterior_sample_trace.pdf"
-pdf(file = initial_posterior_sample_trace_plot_file, width = 7, height = 7)
-
-par(mfrow = c(initial_m, initial_m))
-plot.posterior.sample.trace(initial_mcmc)
-dev.off()
-
-# FIXME: change to path of posterior (sample) density plot (initial)
-initial_posterior_sample_density_plot_file <- "location/to/mhap_MOIRE_initial_posterior_sample_density.pdf"
-pdf(file = initial_posterior_sample_density_plot_file, width = 7, height = 7)
-
-par(mfrow = c(initial_m, initial_m))
-plot.posterior.sample.density(initial_mcmc)
-dev.off()
-
-# FIXME: change to path of posterior (sample) ACF plot (initial)
-initial_posterior_sample_acf_plot_file <- "location/to/mhap_MOIRE_initial_posterior_sample_ACF.pdf"
-pdf(file = initial_posterior_sample_acf_plot_file, width = 7, height = 7)
-
-par(mfrow = c(initial_m, initial_m))
-plot.posterior.sample.acf(initial_mcmc)
-dev.off()
-
-## STOP and determine the appropriate burn-in and sample parameters
-
-
 # these default parameters can be adjusted accordingly:
 # burn-in = 200 [burnin], total number of samples = 100,000
 # in my testing, a thread can handle 4 chains
@@ -158,8 +115,8 @@ file <- "location/to/mhap_MOIRE.rds"
 saveRDS(mcmc_results, file = file)
 
 
-## produce MCMC diagnostics for assessment (adjusted), see:
-## https://sbfnk.github.io/mfiidd/mcmc_diagnostics.html
+## produce MCMC diagnostics for assessment, see:
+## https://www.statlect.com/fundamentals-of-statistics/Markov-Chain-Monte-Carlo-diagnostics
 nchain <- length(mcmc_results[["chains"]])
 m <- ceiling(sqrt(nchain))
 
@@ -179,14 +136,6 @@ par(mfrow = c(m, m))
 plot.posterior.sample.trace(mcmc_results)
 dev.off()
 
-# FIXME: change to path of posterior (sample) density plot (adjusted)
-posterior_sample_density_plot_file <- "location/to/mhap_MOIRE_posterior_sample_density.pdf"
-pdf(file = posterior_sample_density_plot_file, width = 7, height = 7)
-
-par(mfrow = c(m, m))
-plot.posterior.sample.density(mcmc_results)
-dev.off()
-
 # FIXME: change to path of posterior (sample) ACF plot (adjusted)
 posterior_sample_acf_plot_file <- "location/to/mhap_MOIRE_posterior_sample_ACF.pdf"
 pdf(file = posterior_sample_acf_plot_file, width = 7, height = 7)
@@ -195,7 +144,9 @@ par(mfrow = c(m, m))
 plot.posterior.sample.acf(mcmc_results)
 dev.off()
 
-## STOP and determine if the MCMC mixes well
+## STOP and determine if the MCMC parameters need to be re-adjusted
+## https://www.statlect.com/fundamentals-of-statistics/Markov-Chain-Monte-Carlo-diagnostics
+## section: Trace plots & Autocorrelation function (ACF) plots 
 
 
 # FIXME: change to path of COI summary

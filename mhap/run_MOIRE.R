@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-## Load all functions by running everything from line 4-77
+## Load all functions by running everything from line 4-84
 run_initial_mcmc <-
   function(data, nchain = 4, burnin = 1000, samples_per_chain = 1000) {
     cl <- parallel::makeCluster(spec = nchain)
@@ -68,8 +68,15 @@ plot.posterior.sample.acf <- function(mcmc_results) {
   for (i in seq_along(mcmc_results[["chains"]])) {
     chain <- mcmc_results[["chains"]][[i]]
     
-    acf(
-      chain[["posterior_sample"]],
+    acf <-
+      acf(
+        chain[["posterior_sample"]],
+        lag.max = length(chain[["posterior_sample"]]) / 5,
+        plot = FALSE
+      )
+    
+    plot(
+      acf,
       main = paste0("Chain ", i),
       ylab = "Posterior (sample) ACF"
     )

@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-## Load all functions by running everything from line 4-101
+## Load all functions by running everything from line 4-108
 outputCIGAR.to.long <- function(outputCIGAR, keep.unused.alleles = FALSE) {
   long <-
     reshape(

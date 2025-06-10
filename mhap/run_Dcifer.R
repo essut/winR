@@ -15,9 +15,16 @@ pad.afreq <- function(afreq, dsmp) {
   # normalise number of allele in population
   for (i in seq_along(smpafreq)) {
     allele.diff <- setdiff(names(smpafreq[[i]]), names(afreq[[i]]))
-    afreq[[i]] <-
-      c(afreq[[i]], setNames(numeric(length(allele.diff)), allele.diff))
+    
+    # set the frequencies for the missing alleles
+    small <- min(afreq[[i]]) / length(allele.diff)
+    smalls <- setNames(rep(small, length(allele.diff)), allele.diff)
+    
+    afreq[[i]] <- c(afreq[[i]], smalls)
     afreq[[i]] <- afreq[[i]][order(names(afreq[[i]]))]
+    
+    # normalise frequencies to 1
+    afreq[[i]] <- afreq[[i]] / sum(afreq[[i]])
   }
   
   return(afreq)

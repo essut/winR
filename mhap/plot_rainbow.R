@@ -117,14 +117,21 @@ dlong[["chromosome"]] <- factor(dlong[["chromosome"]], levels = chrom.order)
 sorted.dlong <- sort.dlong(dlong)
 dlong.wratio <- calculate.ratio(sorted.dlong)
 
-# FIXME: select the sample to "rainbow" plot
-sample_id <- "CQE98-Pv"
+# FIXME: by default, plot all samples
+sample_ids <- sort(unique(dlong.wratio[["sample_id"]]))
 
-# FIXME: adjust path and size for "rainbow" plot
-rainbow.plot.file <- "location/to/mhap_rainbow_plot.pdf"
-pdf(file = rainbow.plot.file, width = 20, height = 5)
+# FIXME: adjust path to "rainbow" plots
+rainbow.plot.path <- "location/to/rainbow"
+dir.create(rainbow.plot.path, recursive = TRUE)
 
-plot.rainbow(dlong.wratio, sample_id)
-title(sample_id)
-
-dev.off()
+for (sample_id in sample_ids) {
+  rainbow.plot.file <- paste0(rainbow.plot.path, "/", sample_id, "_rainbow_plot.pdf")
+  
+  # FIXME: adjust size of "rainbow" plot
+  pdf(file = rainbow.plot.file, width = 20, height = 5)
+  
+  plot.rainbow(dlong.wratio, sample_id)
+  title(sample_id)
+  
+  dev.off()
+}

@@ -182,6 +182,13 @@ mhap.filtered.subset <-
 ## STOP and look at the generated text and figure statistics
 ## Was the remaining locus threshold appropriate for this dataset?
 
+print(sort(unique(mhap.filtered.subset[["sample_id"]])))
+
+# FIXME: remove any unused samples (e.g. controls)
+unused.samples <- c("CQE98-Pv")
+
+mhap.filtered.subset <-
+  mhap.filtered.subset[!mhap.filtered.subset[["sample_id"]] %in% unused.samples, ]
 
 mhap.filtered.subset.file <- paste0(output.dir, "/", "mhap_filtered.tsv")
 

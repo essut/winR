@@ -109,8 +109,12 @@ calculate.overall.relatedness.estimate <- function(m1.estimate, sig, coi) {
 ## Run the commands below step-by-step
 ## Change FIXME lines to the appropriate parameters
 
+# FIXME: change to folder to store outputs
+output.dir <- "location/to/Dcifer"
+dir.create(output.dir, recursive = TRUE)
+
 # FIXME: change to path of filtered microhaplotype data
-sfile <- "location/to/mhap_filtered.tsv"
+sfile <- "location/to/data/mhap_filtered.tsv"
 
 dlong <- read.delim(sfile)
 dsmp <- formatDat(dlong, svar = "sample_id", lvar = "locus", avar = "allele")
@@ -132,8 +136,8 @@ sig <- analyse.significantly.related.samples(dsmp, coi, afreq, dres0)
 mall.estimate <- calculate.overall.relatedness.estimate(m1.estimate, sig, coi)
 
 
-# FIXME: change to path of between-infection relatedness estimate
-mall.estimate.file <- "location/to/mhap_between_relatedness_estimate.tsv"
+mall.estimate.file <-
+  paste0(output.dir, "/", "mhap_between_relatedness_estimate.tsv")
 
 write.table(
   mall.estimate,

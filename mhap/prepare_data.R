@@ -111,6 +111,10 @@ filter.failed.samples <-
 ## Run the commands below step-by-step
 ## Change FIXME lines to the appropriate parameters
 
+# FIXME: change to folder to store outputs
+output.dir <- "location/to/data"
+dir.create(output.dir, recursive = TRUE)
+
 # FIXME: change to outputCIGAR.tsv file path
 outputCIGAR.file <- "location/to/outputCIGAR.tsv"
 
@@ -124,8 +128,7 @@ long <- outputCIGAR.to.long(outputCIGAR)
 # FIXME: comment the line below if you want to keep insertions and deletions in alleles
 long <- rmindel.allele(long)
 
-# FIXME: change to path of unfiltered data
-long.file <- "location/to/long_unfiltered.tsv"
+long.file <- paste0(output.dir, "/", "long_unfiltered.tsv")
 
 write.table(long, long.file, quote = FALSE, sep = "\t", row.names = FALSE)
 
@@ -147,8 +150,8 @@ mhap.filtered.nloci.per.sample[
   "nloci"
 ] <- 0
 
-# FIXME: change to path for statistics on remaining locus (text)
-mhap.filtered.nloci.per.sample.text <- "location/to/mhap_filtered_nloci.tsv"
+mhap.filtered.nloci.per.sample.text <-
+  paste0(output.dir, "/", "mhap_filtered_nloci.tsv")
 
 write.table(
   mhap.filtered.nloci.per.sample,
@@ -162,8 +165,8 @@ write.table(
 # FIXME: change remaining locus threshold for failed samples
 minimum.nloci <- 75 # ~80% markers
 
-# FIXME: change to path for statistics on remaining locus (figure)
-mhap.filtered.nloci.per.sample.figure <- "location/to/mhap_filtered_nloci.pdf"
+mhap.filtered.nloci.per.sample.figure <-
+  paste0(output.dir, "/", "mhap_filtered_nloci.pdf")
 
 pdf(file = mhap.filtered.nloci.per.sample.figure)
 plot.remaining.nloci(mhap.filtered.nloci.per.sample, minimum.nloci)
@@ -180,8 +183,7 @@ mhap.filtered.subset <-
 ## Was the remaining locus threshold appropriate for this dataset?
 
 
-# FIXME: change to path of filtered microhaplotype data
-mhap.filtered.subset.file <- "location/to/mhap_filtered.tsv"
+mhap.filtered.subset.file <- paste0(output.dir, "/", "mhap_filtered.tsv")
 
 write.table(
   mhap.filtered.subset,

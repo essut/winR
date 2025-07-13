@@ -5,6 +5,10 @@ library(ggnetwork)
 
 ## Change FIXME lines to the appropriate parameters
 
+# FIXME: change to folder to store outputs
+output.dir <- "location/to/Dcifer"
+dir.create(output.dir, recursive = TRUE)
+
 # FIXME: change to path to metadata
 metadata.file <- "location/to/metadata.xlsx"
 
@@ -13,7 +17,7 @@ metadata <- read_excel(metadata.file)
 
 
 # FIXME: change to path of between-infection relatedness estimate
-mall.estimate.file <- "location/to/mhap_between_relatedness_estimate.tsv"
+mall.estimate.file <- "location/to/Dcifer/mhap_between_relatedness_estimate.tsv"
 
 mall.estimate <- read.delim(mall.estimate.file)
 
@@ -51,9 +55,10 @@ mall.estimate.meta.within <-
 mall.estimate.meta.within[[metadata.group.column]] <-
   mall.estimate.meta.within[[paste0(metadata.group.column, ".x")]]
 
-# FIXME: adjust name and size (in inches) of between-infection relatedness plot
-between.relatedness.plot.file <- "location/to/mhap_between_relatedness.pdf"
+between.relatedness.plot.file <-
+  paste0(output.dir, "/", "mhap_between_relatedness.pdf")
 
+# FIXME: adjust size (in inches) of between-infection relatedness plot
 pdf(file = between.relatedness.plot.file, width = 4, height = 4)
 
 ggplot(
@@ -83,8 +88,8 @@ cols <- palette.colors(palette = "Okabe-Ito")[-1]
 
 palette <- setNames(cols[1:nlevels(z)], levels(z))
 
-# FIXME: determine path to save plots
-prefix.filename <- "location/to/mhap_network"
+
+prefix.filename <- paste0(output.dir, "/", "mhap_network")
 
 # FIXME: adjust the IBD thresholds as needed
 IBD.thresholds <- c(1, 1/2, 1/4, 1/8, 1/16) * 0.95

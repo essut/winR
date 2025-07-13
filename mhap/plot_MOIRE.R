@@ -31,6 +31,10 @@ calculate_polyclonal_prevalence <- function(polyclonal_status, metadata_group_co
 ## Run the commands below step-by-step
 ## Change FIXME lines to the appropriate parameters
 
+# FIXME: change to folder to store outputs
+output_dir <- "location/to/MOIRE"
+dir.create(output_dir, recursive = TRUE)
+
 # FIXME: change to path to metadata
 metadata_file <- "location/to/metadata.xlsx"
 
@@ -39,17 +43,17 @@ metadata <- read_excel(metadata_file)
 
 
 # FIXME: change to path of COI summary
-coi_summary_file <- "location/to/mhap_COI_summary.tsv"
+coi_summary_file <- "location/to/MOIRE/mhap_COI_summary.tsv"
 
 coi_summary <- read.delim(coi_summary_file)
 
 # FIXME: change to path of polyclonal status
-polyclonal_status_file <- "location/to/mhap_polyclonal_status.tsv"
+polyclonal_status_file <- "location/to/MOIRE/mhap_polyclonal_status.tsv"
 
 polyclonal_status <- read.delim(polyclonal_status_file)
 
 # FIXME: change to path of effective COI summary
-effective_coi_summary_file <- "location/to/mhap_effective_COI_summary.tsv"
+effective_coi_summary_file <- "location/to/MOIRE/mhap_effective_COI_summary.tsv"
 
 effective_coi_summary <- read.delim(effective_coi_summary_file)
 
@@ -85,9 +89,9 @@ effective_coi_summary <-
 ## STOP and check the number of samples remaining after the previous steps
 
 
-# FIXME: adjust name and size (in inches) of COI plot
-coi_plot_file <- "location/to/mhap_COI.pdf"
+coi_plot_file <- paste0(output_dir, "/", "mhap_COI.pdf")
 
+# FIXME: adjust plotting template if necessary
 pdf(file = coi_plot_file, width = 4, height = 4)
 
 ggplot(
@@ -104,8 +108,8 @@ ggplot(
 dev.off()
 
 
-# FIXME: path to polyclonal prevalence statistics
-polyclonal_prevalence_file <- "location/to/mhap_polyclonal_prevalence.tsv"
+polyclonal_prevalence_file <-
+  paste0(output_dir, "/", "mhap_polyclonal_prevalence.tsv")
 
 polyclonal_prevalence <-
   calculate_polyclonal_prevalence(polyclonal_status, metadata_group_column)
@@ -117,9 +121,10 @@ write.table(
   row.names = FALSE
 )
 
-# FIXME: adjust name and size (in inches) of polyclonal prevalence plot
-polyclonal_prevalence_plot_file <- "location/to/mhap_polyclonal_prevalence.pdf"
+polyclonal_prevalence_plot_file <-
+  paste0(output_dir, "/", "mhap_polyclonal_prevalence.pdf")
 
+# FIXME: adjust plotting template if necessary
 pdf(file = polyclonal_prevalence_plot_file, width = 4, height = 4)
 
 ggplot(
@@ -140,9 +145,9 @@ ggplot(
 dev.off()
 
 
-# FIXME: adjust name and size (in inches) of effective COI plot
-effective_coi_plot_file <- "location/to/mhap_effective_COI.pdf"
+effective_coi_plot_file <- paste0(output_dir, "/", "mhap_effective_COI.pdf")
 
+# FIXME: adjust plotting template if necessary
 pdf(file = effective_coi_plot_file, width = 4, height = 4)
 
 ggplot(

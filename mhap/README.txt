@@ -29,4 +29,4 @@ devtools::install_github("aimeertaylor/paneljudge", build_vignettes = TRUE)
 After prepare_data.R, do run_paneljudge.R then plot_paneljudge.R.
 
 
-If interested to visualise the alleles present in a sample, use the plot_rainbow.R script (https://doi.org/10.1093/infdis/jiaa527 Figure 6 panel D)
+If interested to visualise the alleles present in a sample, use the plot_rainbow.R script (https://doi.org/10.1093/infdis/jiaa527 Figure 6 panel D). Run prepare_data.R before executing this script.

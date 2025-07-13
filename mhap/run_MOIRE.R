@@ -89,8 +89,12 @@ plot.posterior.sample.acf <- function(mcmc_results) {
 ## If you already have the mcmc_results saved as RDS,
 ## you don't need to re-do run_mcmc (use readRDS() instead)
 
+# FIXME: change to folder to store outputs
+output_dir <- "location/to/MOIRE"
+dir.create(output_dir, recursive = TRUE)
+
 # FIXME: change to path of filtered microhaplotype data
-sfile <- "location/to/mhap_filtered.tsv"
+sfile <- "location/to/data/mhap_filtered.tsv"
 
 df <- read.delim(sfile)
 data <- moire::load_long_form_data(df)
@@ -116,8 +120,7 @@ mcmc_results <-
     pt_num_threads = pt_num_threads
  )
 
-# FIXME: change to path of MOIRE MCMC 
-file <- "location/to/mhap_MOIRE.rds"
+file <- paste0(output_dir, "/", "mhap_MOIRE.rds")
 
 saveRDS(mcmc_results, file = file)
 
@@ -127,24 +130,24 @@ saveRDS(mcmc_results, file = file)
 nchain <- length(mcmc_results[["chains"]])
 m <- ceiling(sqrt(nchain))
 
-# FIXME: change to path of posterior (burn-in) trace plot (adjusted)
-posterior_burnin_trace_plot_file <- "location/to/mhap_MOIRE_posterior_burnin_trace.pdf"
+posterior_burnin_trace_plot_file <-
+  paste0(output_dir, "/", "mhap_MOIRE_posterior_burnin_trace.pdf")
 pdf(file = posterior_burnin_trace_plot_file, width = 7, height = 7)
 
 par(mfrow = c(m, m))
 plot.posterior.burnin.trace(mcmc_results)
 dev.off()
 
-# FIXME: change to path of posterior (sample) trace plot (adjusted)
-posterior_sample_trace_plot_file <- "location/to/mhap_MOIRE_posterior_sample_trace.pdf"
+posterior_sample_trace_plot_file <-
+  paste0(output_dir, "/", "mhap_MOIRE_posterior_sample_trace.pdf")
 pdf(file = posterior_sample_trace_plot_file, width = 7, height = 7)
 
 par(mfrow = c(m, m))
 plot.posterior.sample.trace(mcmc_results)
 dev.off()
 
-# FIXME: change to path of posterior (sample) ACF plot (adjusted)
-posterior_sample_acf_plot_file <- "location/to/mhap_MOIRE_posterior_sample_ACF.pdf"
+posterior_sample_acf_plot_file <-
+  paste0(output_dir, "/", "mhap_MOIRE_posterior_sample_ACF.pdf")
 pdf(file = posterior_sample_acf_plot_file, width = 7, height = 7)
 
 par(mfrow = c(m, m))
@@ -156,8 +159,7 @@ dev.off()
 ## section: Trace plots & Autocorrelation function (ACF) plots 
 
 
-# FIXME: change to path of COI summary
-coi_summary_file <- "location/to/mhap_COI_summary.tsv"
+coi_summary_file <- paste0(output_dir, "/", "mhap_COI_summary.tsv")
 
 coi_summary <- moire::summarize_coi(mcmc_results)
 write.table(
@@ -169,8 +171,7 @@ write.table(
 )
 
 
-# FIXME: change to path of polyclonal status
-polyclonal_status_file <- "location/to/mhap_polyclonal_status.tsv"
+polyclonal_status_file <- paste0(output_dir, "/", "mhap_polyclonal_status.tsv")
 
 polyclonal_status <-
   data.frame(
@@ -187,8 +188,7 @@ write.table(
 )
 
 
-# FIXME: change to path of effective COI summary
-effective_coi_summary_file <- "location/to/mhap_effective_COI_summary.tsv"
+effective_coi_summary_file <- paste0(output_dir, "/", "mhap_effective_COI_summary.tsv")
 
 effective_coi_summary <- moire::summarize_effective_coi(mcmc_results)
 write.table(

@@ -115,6 +115,10 @@ filter.failed.samples <-
 outputCIGAR.file <- "location/to/outputCIGAR.tsv"
 
 outputCIGAR <- read.delim(outputCIGAR.file, check.names = FALSE)
+
+# use outputCIGAR for complete sample list
+unfiltered.samples <- data.frame(sample_id = sort(outputCIGAR[["sample"]]))
+
 long <- outputCIGAR.to.long(outputCIGAR)
 
 # FIXME: comment the line below if you want to keep insertions and deletions in alleles
@@ -136,6 +140,12 @@ mhap.filtered <- allele.count.filter(mhap, allele.count.cutoff)
 mhap.filtered <- minimum.total.filter(mhap.filtered, minimum.total.cutoff)
 mhap.filtered.nloci.per.sample <- calculate.remaining.nloci(mhap.filtered)
 
+mhap.filtered.nloci.per.sample <-
+  merge(mhap.filtered.nloci.per.sample, unfiltered.samples, all.y = TRUE)
+mhap.filtered.nloci.per.sample[
+  is.na(mhap.filtered.nloci.per.sample[["nloci"]]),
+  "nloci"
+] <- 0
 
 # FIXME: change to path for statistics on remaining locus (text)
 mhap.filtered.nloci.per.sample.text <- "location/to/mhap_filtered_nloci.tsv"

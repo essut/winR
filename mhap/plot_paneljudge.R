@@ -1,18 +1,22 @@
 #!/usr/bin/env Rscript
 library(ggplot2)
 
+# FIXME: change to folder to store outputs
+output.dir <- "location/to/paneljudge"
+dir.create(output.dir, recursive = TRUE)
+
 # FIXME: change according to group column in metadata
 metadata.group.column <- "Year"
 
 
 # FIXME: change to path of diversities
-diversities.file <- "location/to/mhap_paneljudge_diversities.tsv"
+diversities.file <- "location/to/paneljudge/mhap_paneljudge_diversities.tsv"
 
 diversities <- read.delim(diversities.file)
 
-# FIXME: adjust name and size (in inches) of paneljudge diversities plot
-diversities.plot.file <- "location/to/mhap_paneljudge_diversities.pdf"
+diversities.plot.file <- paste0(output.dir, "/", "mhap_paneljudge_diversities.pdf")
 
+# FIXME: adjust size (in inches) of paneljudge diversities plot
 pdf(file = diversities.plot.file, width = 4, height = 4)
 
 ggplot(diversities, aes(x = as.factor(.data[[metadata.group.column]]), y = diversity)) +
@@ -27,13 +31,14 @@ dev.off()
 
 
 # FIXME: change to path of effective cardinalities
-eff.cardinalities.file <- "location/to/mhap_paneljudge_eff_cardinalities.tsv"
+eff.cardinalities.file <- "location/to/paneljudge/mhap_paneljudge_eff_cardinalities.tsv"
 
 eff.cardinalities <- read.delim(eff.cardinalities.file)
 
-# FIXME: adjust name and size (in inches) of paneljudge effective cardinalities plot
-eff.cardinalities.plot.file <- "location/to/mhap_paneljudge_eff_cardinalities.pdf"
+eff.cardinalities.plot.file <-
+  paste0(output.dir, "/", "mhap_paneljudge_eff_cardinalities.pdf")
 
+# FIXME: adjust size (in inches) of paneljudge effective cardinalities plot
 pdf(file = eff.cardinalities.plot.file, width = 4, height = 4)
 
 ggplot(eff.cardinalities, aes(x = as.factor(.data[[metadata.group.column]]), y = eff_cardinality)) +
@@ -47,7 +52,7 @@ dev.off()
 
 
 # FIXME: change to path of estimates of k and r
-krhats.file <- "location/to/mhap_paneljudge_k_r_estimates.tsv"
+krhats.file <- "location/to/paneljudge/mhap_paneljudge_k_r_estimates.tsv"
 
 krhats <- read.delim(krhats.file)
 
@@ -59,9 +64,9 @@ rmse.krhats <-
   )
 names(rmse.krhats)[length(rmse.krhats)] <- "RMSE"
 
-# FIXME: adjust name and size (in inches) of paneljudge k and r estimates plot
-krhats.plot.file <- "location/to/mhap_paneljudge_k_r_estimates.pdf"
+krhats.plot.file <- paste0(output.dir, "/", "mhap_paneljudge_k_r_estimates.pdf")
 
+# FIXME: adjust size (in inches) of paneljudge k and r estimates plot
 pdf(file = krhats.plot.file, width = 6, height = 4)
 
 ggplot(rmse.krhats, aes(x = r, y = RMSE)) +

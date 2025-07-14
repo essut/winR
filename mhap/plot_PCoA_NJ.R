@@ -154,6 +154,10 @@ group.NJ <- function(NJ, tip.groups, mixed.group) {
 ## Run the commands below step-by-step
 ## Change FIXME lines to the appropriate parameters
 
+# FIXME: change to folder to store outputs
+output.dir <- "location/to/PCoA_NJ"
+dir.create(output.dir, recursive = TRUE)
+
 # FIXME: change to path to metadata
 metadata.file <- "location/to/metadata.xlsx"
 
@@ -162,12 +166,12 @@ metadata <- read_excel(metadata.file)
 
 
 # FIXME: change to path of filtered microhaplotype data
-sfile <- "location/to/mhap_filtered.tsv"
+sfile <- "location/to/data/mhap_filtered.tsv"
 
 dlong <- read.delim(sfile)
 
 # FIXME: change to path of polyclonal status
-polyclonal.status.file <- "location/to/mhap_polyclonal_status.tsv"
+polyclonal.status.file <- "location/to/MOIRE/mhap_polyclonal_status.tsv"
 
 polyclonal.status <- read.delim(polyclonal.status.file)
 
@@ -192,8 +196,8 @@ get.usable.markers(dlong.major.wide.missingness)
 # FIXME: set a cutoff to remove as many missing locus as possible
 missing.sample.per.locus.cutoff <- 5
 
-# FIXME: change to path for missing sample per locus
-missing.sample.per.locus.plot.file <- "location/to/mhap_missing_sample_per_locus.pdf"
+missing.sample.per.locus.plot.file <-
+  paste0(output.dir, "/", "mhap_missing_sample_per_locus.pdf")
 
 pdf(file = missing.sample.per.locus.plot.file)
 plot.missing.sample.per.locus(
@@ -226,8 +230,8 @@ get.usable.markers(dlong.major.wide.locfilt.missingness)
 # FIXME: set a cutoff to remove as many missing sample as possible
 missing.locus.per.sample.cutoff <- 0
 
-# FIXME: change to path for missing locus per sample
-missing.locus.per.sample.plot.file <- "location/to/mhap_missing_locus_per_sample.pdf"
+missing.locus.per.sample.plot.file <-
+  paste0(output.dir, "/", "mhap_missing_locus_per_sample.pdf")
 
 pdf(file = missing.locus.per.sample.plot.file)
 plot.missing.locus.per.sample(
@@ -293,8 +297,7 @@ data <-
   )
 
 
-# FIXME: determine path to save PCoA plots
-PCoA.prefix.filename <- "location/to/mhap_PCoA"
+PCoA.prefix.filename <- paste0(output.dir, "/", "mhap_PCoA")
 
 # FIXME: number of PCoA axes to plot
 n.axis <- 3
@@ -342,8 +345,7 @@ edge.colours <- group.NJ(tr, tip.colours, "#E5E4E2")
 ## there is probably a sample with no available metadata
 
 
-# FIXME: determine path to save NJ plots
-NJ.prefix.filename <- "location/to/mhap_NJ"
+NJ.prefix.filename <- paste0(output.dir, "/", "mhap_NJ")
 
 
 ## rooted, labelled

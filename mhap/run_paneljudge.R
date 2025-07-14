@@ -242,6 +242,10 @@ compute.r.and.k.CIs <-
 ## Run the commands below step-by-step
 ## Change FIXME lines to the appropriate parameters
 
+# FIXME: change to folder to store outputs
+output.dir <- "location/to/paneljudge"
+dir.create(output.dir, recursive = TRUE)
+
 # FIXME: change to path to metadata
 metadata.file <- "location/to/metadata.xlsx"
 
@@ -250,12 +254,12 @@ metadata <- read_excel(metadata.file)
 
 
 # FIXME: change to path of filtered microhaplotype data
-sfile <- "location/to/mhap_filtered.tsv"
+sfile <- "location/to/data/mhap_filtered.tsv"
 
 dlong <- read.delim(sfile)
 
 # FIXME: change to path of polyclonal status
-polyclonal.status.file <- "location/to/mhap_polyclonal_status.tsv"
+polyclonal.status.file <- "location/to/MOIRE/mhap_polyclonal_status.tsv"
 
 polyclonal.status <- read.delim(polyclonal.status.file)
 
@@ -289,8 +293,7 @@ frequencies <- synchronise.used.markers(frequencies)
 nrow(frequencies[[1]])
 
 
-# FIXME: change to path of diversities
-diversities.file <- "location/to/mhap_paneljudge_diversities.tsv"
+diversities.file <- paste0(output.dir, "/", "mhap_paneljudge_diversities.tsv")
 
 diversities <- compute.diversities(frequencies, metadata.group.column)
 write.table(
@@ -302,8 +305,8 @@ write.table(
 )
 
 
-# FIXME: change to path of effective cardinalities
-eff.cardinalities.file <- "location/to/mhap_paneljudge_eff_cardinalities.tsv"
+eff.cardinalities.file <-
+  paste0(output.dir, "/", "mhap_paneljudge_eff_cardinalities.tsv")
 
 eff.cardinalities <- compute.eff.cardinalities(frequencies, metadata.group.column)
 write.table(
@@ -315,8 +318,7 @@ write.table(
 )
 
 
-# FIXME: change to path of estimates of k and r
-krhats.file <- "location/to/mhap_paneljudge_k_r_estimates.tsv"
+krhats.file <- paste0(output.dir, "/", "mhap_paneljudge_k_r_estimates.tsv")
 
 # FIXME: number of pairs to simulate
 n <- 100
@@ -357,9 +359,11 @@ write.table(
 ## this might take a while to perform
 
 # # FIXME: change to path of estimates of k and r with confidence intervals
-# krhats.CIs.file <- "location/to/mhap_paneljudge_k_r_estimates_CIs.tsv"
+# krhats.CIs.file <-
+#   paste0(output.dir, "/", "mhap_paneljudge_k_r_estimates_CIs.tsv")
 # 
-# krhats.CIs <- compute.r.and.k.CIs(frequencies, metadata.group.column, markers, krhats)
+# krhats.CIs <-
+#   compute.r.and.k.CIs(frequencies, metadata.group.column, markers, krhats)
 # 
 # write.table(
 #   krhats.CIs,

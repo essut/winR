@@ -104,8 +104,12 @@ plot.rainbow <- function(dlong.wratio, sample_id, add.marker.label = TRUE) {
 ## Run the commands below step-by-step
 ## Change FIXME lines to the appropriate parameters
 
+# FIXME: change to folder to store outputs
+output.dir <- "location/to/rainbow"
+dir.create(output.dir, recursive = TRUE)
+
 # FIXME: change to path of filtered microhaplotype data
-sfile <- "location/to/mhap_filtered.tsv"
+sfile <- "location/to/data/mhap_filtered.tsv"
 
 dlong <- read.delim(sfile)
 dlong <- decompose.loci(dlong)
@@ -120,12 +124,8 @@ dlong.wratio <- calculate.ratio(sorted.dlong)
 # FIXME: by default, plot all samples
 sample_ids <- sort(unique(dlong.wratio[["sample_id"]]))
 
-# FIXME: adjust path to "rainbow" plots
-rainbow.plot.path <- "location/to/rainbow"
-dir.create(rainbow.plot.path, recursive = TRUE)
-
 for (sample_id in sample_ids) {
-  rainbow.plot.file <- paste0(rainbow.plot.path, "/", sample_id, "_rainbow_plot.pdf")
+  rainbow.plot.file <- paste0(output.dir, "/", sample_id, "_rainbow_plot.pdf")
   
   # FIXME: adjust size of "rainbow" plot
   pdf(file = rainbow.plot.file, width = 20, height = 5)

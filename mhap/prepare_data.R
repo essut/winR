@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-## Load all functions by running everything from line 4-108
+## Load all functions by running everything from line 4-124
 outputCIGAR.to.long <- function(outputCIGAR, keep.unused.alleles = FALSE) {
   long <-
     reshape(
@@ -25,6 +25,22 @@ outputCIGAR.to.long <- function(outputCIGAR, keep.unused.alleles = FALSE) {
   long[["allele"]] <- vapply(locus.allele, "[[", character(1), 2)
   
   long[, c("sample_id", "locus", "allele", "count")]
+}
+
+
+merge.outputCIGARs <- function(outputCIGAR.files) {
+  longs <- list()
+  
+  for (i in seq_along(outputCIGAR.files)) {
+    outputCIGAR.file <- outputCIGAR.files[i]
+    outputCIGAR <- read.delim(outputCIGAR.file, check.names = FALSE)
+    longs[[i]] <- outputCIGAR.to.long(outputCIGAR)
+  }
+  
+  long <- do.call(rbind, longs)
+  
+  # consolidate allele counts from different runs
+  aggregate(count ~ sample_id + locus + allele, long, sum)
 }
 
 
@@ -115,16 +131,41 @@ filter.failed.samples <-
 output.dir <- "location/to/data"
 dir.create(output.dir, recursive = TRUE)
 
-# FIXME: change to outputCIGAR.tsv file path
-outputCIGAR.file <- "location/to/outputCIGAR.tsv"
+# FIXME: change to outputCIGAR.tsv file paths
+outputCIGAR.files <-
+  c(
+    "location/to/outputCIGAR.tsv",
+    "another/outputCIGAR.tsv"
+  )
 
-outputCIGAR <- read.delim(outputCIGAR.file, check.names = FALSE)
+# use outputCIGARs for complete sample list
+unfiltered.samples <- character()
+for (outputCIGAR.file in outputCIGAR.files) {
+  unfiltered.samples <-
+    c(unfiltered.samples, read.delim(outputCIGAR.file, check.names = FALSE)[["sample"]])
+}
+unfiltered.samples <- sort(unique(unfiltered.samples))
+unfiltered.samples <- data.frame(sample_id = unfiltered.samples)
 
-# use outputCIGAR for complete sample list
-unfiltered.samples <- data.frame(sample_id = sort(outputCIGAR[["sample"]]))
+print(unfiltered.samples)
+## STOP and check the sample list, correct the outputCIGARs as necessary
 
-long <- outputCIGAR.to.long(outputCIGAR)
+long <- merge.outputCIGARs(outputCIGAR.files)
 
+
+# FIXME: remove samples if needed (e.g. samples from a different cohort)
+removed.samples <- c("sWGA_1_10", "sWGA_1_20", "sWGA_1_30")
+
+unfiltered.samples <-
+  unfiltered.samples[
+    !unfiltered.samples[["sample_id"]] %in% removed.samples,
+    ,
+    drop = FALSE
+  ]
+
+long <- long[!long[["sample_id"]] %in% removed.samples, ]
+
+  
 # FIXME: comment the line below if you want to keep insertions and deletions in alleles
 long <- rmindel.allele(long)
 
@@ -182,7 +223,7 @@ mhap.filtered.subset <-
 ## STOP and look at the generated text and figure statistics
 ## Was the remaining locus threshold appropriate for this dataset?
 
-print(sort(unique(mhap.filtered.subset[["sample_id"]])))
+print(data.frame(sample_id = sort(unique(mhap.filtered.subset[["sample_id"]]))))
 
 # FIXME: remove any unused samples (e.g. controls)
 unused.samples <- c("CQE98-Pv")

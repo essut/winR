@@ -36,50 +36,50 @@ sort.dlong <- function(dlong) {
 }
 
 
-calculate.ratio <- function(sorted.dlong) {
+calculate.prop <- function(sorted.dlong) {
   dlong.count <- aggregate(count ~ sample_id + locus, sorted.dlong, sum)
   names(dlong.count)[length(dlong.count)] <- "total"
   
-  sorted.dlong.wratio <- merge(sorted.dlong, dlong.count, sort = FALSE)
-  sorted.dlong.wratio[["ratio"]] <-
-    sorted.dlong.wratio[["count"]] / sorted.dlong.wratio[["total"]]
+  sorted.dlong.wprop <- merge(sorted.dlong, dlong.count, sort = FALSE)
+  sorted.dlong.wprop[["prop"]] <-
+    sorted.dlong.wprop[["count"]] / sorted.dlong.wprop[["total"]]
   
-  sorted.dlong.wratio
+  sorted.dlong.wprop
 }
 
 
 ## assumes loci are ordered
-plot.rainbow <- function(dlong.wratio, sample_id, add.marker.label = TRUE) {
+plot.rainbow <- function(dlong.wprop, sample_id, add.marker.label = TRUE) {
   if (length(sample_id) != 1) {
     stop("Please select a single sample to plot.")
   }
   
-  index <- dlong.wratio[["sample_id"]] %in% sample_id
+  index <- dlong.wprop[["sample_id"]] %in% sample_id
   if (any(index) == FALSE) {
     stop("Sample not found in the dataset: ", sample_id)
   }
   
-  sample.dlong <- dlong.wratio[index, ]
+  sample.dlong <- dlong.wprop[index, ]
 
   # maximum number of alleles per locus is dependent on the dataset
-  dataset.alleles <- unique(dlong.wratio[, c("marker", "allele")])
+  dataset.alleles <- unique(dlong.wprop[, c("marker", "allele")])
   
   sample.dlong <- merge(dataset.alleles, sample.dlong, all = TRUE)
   
-  allele.ratio <-
-    tapply(sample.dlong[["ratio"]], sample.dlong[["marker"]], unlist)
-  allele.ratio <-
-    lapply(allele.ratio, function(x) {
+  allele.prop <-
+    tapply(sample.dlong[["prop"]], sample.dlong[["marker"]], unlist)
+  allele.prop <-
+    lapply(allele.prop, function(x) {
       x[is.na(x)] <- 0
       return(x)
     })
   
-  allele.length <- lengths(allele.ratio)
+  allele.length <- lengths(allele.prop)
   allele.pad <-
     lapply(max(allele.length) - allele.length, function(n) rep(NA, n))
   
   allele.complete <-
-    mapply(function(x, y) c(x, y), allele.ratio, allele.pad)
+    mapply(function(x, y) c(x, y), allele.prop, allele.pad)
   
   # plot each bar according to number of alleles per marker
   first.plot <- TRUE
@@ -119,10 +119,10 @@ chrom.order <- paste0("PvP01_", sprintf("%02d", 1:14), "_v2")
 dlong[["chromosome"]] <- factor(dlong[["chromosome"]], levels = chrom.order)
 
 sorted.dlong <- sort.dlong(dlong)
-dlong.wratio <- calculate.ratio(sorted.dlong)
+dlong.wprop <- calculate.prop(sorted.dlong)
 
 # FIXME: by default, plot all samples
-sample_ids <- sort(unique(dlong.wratio[["sample_id"]]))
+sample_ids <- sort(unique(dlong.wprop[["sample_id"]]))
 
 for (sample_id in sample_ids) {
   rainbow.plot.file <- paste0(output.dir, "/", sample_id, "_rainbow_plot.pdf")
@@ -130,7 +130,7 @@ for (sample_id in sample_ids) {
   # FIXME: adjust size of "rainbow" plot
   pdf(file = rainbow.plot.file, width = 20, height = 5)
   
-  plot.rainbow(dlong.wratio, sample_id)
+  plot.rainbow(dlong.wprop, sample_id)
   title(sample_id)
   
   dev.off()

@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-## Load all functions by running everything from line 4-124
+## Load all functions by running everything from line 4-146
 outputCIGAR.to.long <- function(outputCIGAR, keep.unused.alleles = FALSE) {
   long <-
     reshape(
@@ -71,6 +71,28 @@ select.markers <- function(long, keep.marker = "microhaplotype") {
     },
     stop("Valid options are 'microhaplotype', 'drugR', 'mitochondria'")
   )
+}
+
+
+.calculate.prop <- function(long) {
+  dlong.count <- aggregate(count ~ sample_id + locus, long, sum)
+  names(dlong.count)[length(dlong.count)] <- "total"
+  
+  long.wprop <- merge(long, dlong.count, sort = FALSE)
+  long.wprop[["prop"]] <-
+    long.wprop[["count"]] / long.wprop[["total"]]
+  
+  long.wprop
+}
+
+
+allele.proportion.filter <- function(long, allele.proportion.cutoff) {
+  long.wprop <- .calculate.prop(long)
+  
+  long.wprop[
+    long.wprop[["prop"]] >= allele.proportion.cutoff,
+    c("sample_id", "locus", "allele", "count")
+  ]
 }
 
 
@@ -175,13 +197,15 @@ write.table(long, long.file, quote = FALSE, sep = "\t", row.names = FALSE)
 
 
 # FIXME: change read-pair threshold for failed genotype
+allele.proportion.cutoff <- 0.02 # allele proportion is at least 2% per locus per sample
 allele.count.cutoff <- 5 # at least 5 read-pairs needed for each allele
-minimum.total.cutoff <- 10 # at least 10 read-pairs in total per locus per sample
+# minimum.total.cutoff <- 10 # at least 10 read-pairs in total per locus per sample
 
 # FIXME: comment any lines below to disable certain filters
 mhap <- select.markers(long, keep.marker = "microhaplotype")
-mhap.filtered <- allele.count.filter(mhap, allele.count.cutoff)
-mhap.filtered <- minimum.total.filter(mhap.filtered, minimum.total.cutoff)
+mhap.filtered <- allele.proportion.filter(mhap, allele.proportion.cutoff)
+mhap.filtered <- allele.count.filter(mhap.filtered, allele.count.cutoff)
+# mhap.filtered <- minimum.total.filter(mhap.filtered, minimum.total.cutoff)
 mhap.filtered.nloci.per.sample <- calculate.remaining.nloci(mhap.filtered)
 
 mhap.filtered.nloci.per.sample <-

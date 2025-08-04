@@ -1,17 +1,17 @@
 #!/usr/bin/env Rscript
 
 ## Load all functions by running everything from line 4-146
-outputCIGAR.to.long <- function(outputCIGAR, keep.unused.alleles = FALSE) {
+output.to.long <- function(output, keep.unused.alleles = FALSE) {
   long <-
     reshape(
-      outputCIGAR,
+      output,
       direction = "long",
-      varying = names(outputCIGAR)[-1],
+      varying = names(output)[-1],
       v.names = "count",
       timevar = "pseudoCIGAR",
-      times = names(outputCIGAR)[-1],
+      times = names(output)[-1],
       idvar = "sample_id",
-      ids = outputCIGAR[["sample"]]
+      ids = output[["sample"]]
     )
   row.names(long) <- NULL
   
@@ -28,13 +28,13 @@ outputCIGAR.to.long <- function(outputCIGAR, keep.unused.alleles = FALSE) {
 }
 
 
-merge.outputCIGARs <- function(outputCIGAR.files) {
+merge.outputs <- function(output.files) {
   longs <- list()
   
-  for (i in seq_along(outputCIGAR.files)) {
-    outputCIGAR.file <- outputCIGAR.files[i]
-    outputCIGAR <- read.delim(outputCIGAR.file, check.names = FALSE)
-    longs[[i]] <- outputCIGAR.to.long(outputCIGAR)
+  for (i in seq_along(output.files)) {
+    output.file <- output.files[i]
+    output <- read.delim(output.file, check.names = FALSE)
+    longs[[i]] <- output.to.long(output)
   }
   
   long <- do.call(rbind, longs)
@@ -153,26 +153,26 @@ filter.failed.samples <-
 output.dir <- "location/to/data"
 dir.create(output.dir, recursive = TRUE)
 
-# FIXME: change to outputCIGAR.tsv file paths
-outputCIGAR.files <-
+# FIXME: change to outputCIGAR.tsv / outputHaplotypes.tsv file paths
+output.files <-
   c(
     "location/to/outputCIGAR.tsv",
     "another/outputCIGAR.tsv"
   )
 
-# use outputCIGARs for complete sample list
+# use outputs for complete sample list
 unfiltered.samples <- character()
-for (outputCIGAR.file in outputCIGAR.files) {
+for (output.file in output.files) {
   unfiltered.samples <-
-    c(unfiltered.samples, read.delim(outputCIGAR.file, check.names = FALSE)[["sample"]])
+    c(unfiltered.samples, read.delim(output.file, check.names = FALSE)[["sample"]])
 }
 unfiltered.samples <- sort(unique(unfiltered.samples))
 unfiltered.samples <- data.frame(sample_id = unfiltered.samples)
 
 print(unfiltered.samples)
-## STOP and check the sample list, correct the outputCIGARs as necessary
+## STOP and check the sample list, correct the outputs as necessary
 
-long <- merge.outputCIGARs(outputCIGAR.files)
+long <- merge.outputs(output.files)
 
 
 # FIXME: remove samples if needed (e.g. samples from a different cohort)

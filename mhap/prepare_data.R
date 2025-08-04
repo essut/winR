@@ -56,8 +56,26 @@ merge.outputs <- function(output.files) {
 }
 
 
+.rmindel.allele.outputHaplotypes <- function(long) {
+  warning("Indel removal is not yet supported for outputHaplotypes.tsv")
+  
+  long
+}
+
+
 rmindel.allele <- function(long) {
-  long <- .rmindel.allele.outputCIGAR(long)
+  is.outputCIGAR <- any(grepl("[DI]=", long[["allele"]]))
+  is.outputHaplotypes <- any(grepl("[+-][acgt]+", long[["allele"]]))
+  
+  if (is.outputCIGAR & is.outputHaplotypes) {
+    stop("Detected both pseudoCIGAR and cs tag, please do not mix them")
+  }
+  if (is.outputCIGAR) {
+    long <- .rmindel.allele.outputCIGAR(long)
+  }
+  if (is.outputHaplotypes) {
+    long <- .rmindel.allele.outputHaplotypes(long)
+  }
   
   # consolidate allele counts after indel removal
   aggregate(count ~ sample_id + locus + allele, long, sum)

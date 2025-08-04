@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-## Load all functions by running everything from line 4-146
+## Load all functions by running everything from line 4-259
 output.to.long <- function(output, keep.unused.alleles = FALSE) {
   long <-
     reshape(
@@ -57,7 +57,95 @@ merge.outputs <- function(output.files) {
 
 
 .rmindel.allele.outputHaplotypes <- function(long) {
-  warning("Indel removal is not yet supported for outputHaplotypes.tsv")
+  # soft clip pattern: [+-][ACGT]+
+  long[["allele"]] <- gsub("[+-][ACGT]+", "", long[["allele"]])
+  
+  # insertion pattern: +[acgt]+
+  long[["allele"]] <- gsub("\\+[acgt]+", "", long[["allele"]])
+  
+  ## removing deletion is more involved in cs tag
+  # deletion pattern: -[acgt]+
+  del.match <- gregexpr("-[acgt]+", long[["allele"]])
+  
+  # find how long the deletions are
+  del.sub <- lapply(del.match, function(x) paste0(":", attr(x, "match.length") - 1))
+  del.sub <- lapply(del.sub, function(x) sub(":-2", "", x))
+  
+  # mark and replace the deletions with the correct reference length
+  long[["allele"]] <- gsub("-[acgt]+", "-", long[["allele"]])
+  long[["allele"]] <- strsplit(long[["allele"]], "-")
+  del.sub <-
+    mapply(
+      function(x, y) c(x, character(y)),
+      x = del.sub,
+      y = lengths(long[["allele"]]) - lengths(del.sub)
+    )
+  long[["allele"]] <-
+    mapply(
+      function(x, y) paste0(c(rbind(x, y)), collapse = ""),
+      x = long[["allele"]],
+      y = del.sub
+    )
+  
+  # scan and sum up the split references
+  cs.modified <- character(length(long[["allele"]]))
+  i <- 1
+  
+  for (cs.original in strsplit(long[["allele"]], character())) {
+    numeric.store <- numeric()
+    potential.numbers <- character()
+    cs <- c()
+    
+    for (char in cs.original) {
+      
+      # if not numeric
+      if (is.na(as.numeric(char))) {
+        
+        if (length(potential.numbers) != 0) {
+          numeric.store <-
+            c(numeric.store, as.numeric(paste0(potential.numbers, collapse = "")))
+          
+          numeric.store <- na.omit(numeric.store)
+        }
+        
+        # if not reference
+        if (char != ":") {
+          if (length(numeric.store) > 0) {
+            cs <- c(cs, sum(numeric.store))
+          }
+          numeric.store <- numeric()
+          potential.numbers <- character()
+        }
+        
+        # store digits if there are other digits in storage
+        if (length(numeric.store) == 0) {
+          cs <- c(cs, char)
+        } else {
+          potential.numbers <- character()
+        }
+        
+      } else {
+        potential.numbers <- c(potential.numbers, char)
+      }
+    }
+    
+    # end of loop, make sure everything is written
+    numeric.store <-
+      sum(
+        numeric.store,
+        as.numeric(paste0(potential.numbers, collapse = "")),
+        na.rm = TRUE
+      )
+      
+    if (numeric.store != 0) {
+      cs <- c(cs, as.character(numeric.store))
+    }
+    
+    cs.modified[i] <- paste0(cs, collapse = "")
+    i <- i + 1
+  }
+
+  long[["allele"]] <- cs.modified
   
   long
 }

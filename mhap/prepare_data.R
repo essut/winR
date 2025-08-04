@@ -44,13 +44,20 @@ merge.outputs <- function(output.files) {
 }
 
 
-rmindel.allele <- function(long) {
+.rmindel.allele.outputCIGAR <- function(long) {
   # insertion pattern: {position}I={bases}
   # deletion pattern: {position}D={bases}
   long[["allele"]] <- gsub("([0-9]+)[DI]=([ACGT]+)", "", long[["allele"]])
   
   # default to wild type if all variants were removed
   long[long[["allele"]] %in% "", "allele"] <- "."
+  
+  long
+}
+
+
+rmindel.allele <- function(long) {
+  long <- .rmindel.allele.outputCIGAR(long)
   
   # consolidate allele counts after indel removal
   aggregate(count ~ sample_id + locus + allele, long, sum)

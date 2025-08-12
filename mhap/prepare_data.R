@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-## Load all functions by running everything from line 4-259
+## Load all functions by running everything from line 4-268
 output.to.long <- function(output, keep.unused.alleles = FALSE) {
   long <-
     reshape(
@@ -57,8 +57,17 @@ merge.outputs <- function(output.files) {
 
 
 .rmindel.allele.outputHaplotypes <- function(long) {
-  # soft clip pattern: [+-][ACGT]+
-  long[["allele"]] <- gsub("[+-][ACGT]+", "", long[["allele"]])
+  # outputHaplotypes.tsv have a suffix format to determine
+  # whether to keep or remove soft clips at each end
+  trim.start <- grepl("_s-.*$", long[["allele"]])
+  trim.end <- grepl("-e$", long[["allele"]])
+  
+  # trim the suffix
+  long[["allele"]] <- sub("_.*$", "", long[["allele"]])
+  
+  # trim the soft clips, pattern: [+-][ACGT]+
+  long[trim.start, "allele"] <- sub("^[+-][ACGT]+", "", long[trim.start, "allele"])
+  long[trim.end, "allele"] <- sub("[+-][ACGT]+$", "", long[trim.end, "allele"])
   
   # insertion pattern: +[acgt]+
   long[["allele"]] <- gsub("\\+[acgt]+", "", long[["allele"]])
@@ -72,8 +81,8 @@ merge.outputs <- function(output.files) {
   del.sub <- lapply(del.sub, function(x) sub(":-2", "", x))
   
   # mark and replace the deletions with the correct reference length
-  long[["allele"]] <- gsub("-[acgt]+", "-", long[["allele"]])
-  long[["allele"]] <- strsplit(long[["allele"]], "-")
+  long[["allele"]] <- gsub("-[acgt]+", "|", long[["allele"]])
+  long[["allele"]] <- strsplit(long[["allele"]], "\\|")
   del.sub <-
     mapply(
       function(x, y) c(x, character(y)),

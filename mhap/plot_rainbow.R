@@ -49,7 +49,7 @@ calculate.prop <- function(sorted.dlong) {
 
 
 ## assumes loci are ordered
-plot.rainbow <- function(dlong.wprop, sample_id, add.marker.label = TRUE) {
+plot.rainbow <- function(dlong.wprop, sample_id, add.marker.label = TRUE, sort.by.prop = FALSE) {
   if (length(sample_id) != 1) {
     stop("Please select a single sample to plot.")
   }
@@ -90,6 +90,16 @@ plot.rainbow <- function(dlong.wprop, sample_id, add.marker.label = TRUE) {
     plot.device[, !colnames(allele.complete) %in% marker] <- NA
     
     col <- scales::pal_hue()(allele.length[marker])
+    
+    if (sort.by.prop) {
+      unsorted <- plot.device[, colnames(allele.complete) %in% marker]
+      names(unsorted) <- col
+      
+      sorted <- sort(unsorted, decreasing = TRUE, na.last = TRUE)
+      
+      col <- names(sorted)[seq_len(allele.length[marker])]
+      plot.device[, colnames(allele.complete) %in% marker] <- sorted
+    }
     
     if (first.plot) {
       barplot(plot.device, col = col, axisnames = add.marker.label, las = 2)

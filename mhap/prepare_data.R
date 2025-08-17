@@ -1,6 +1,48 @@
 #!/usr/bin/env Rscript
 
-## Load all functions by running everything from line 4-268
+## Load all functions by running everything from line 4-350
+load.outputs <- function(output.files) {
+  outputs <- list()
+  for (output.file in output.files) {
+    outputs[[output.file]] <- read.delim(output.file, check.names = FALSE)
+  }
+  outputs
+}
+
+
+get.sample.list <- function(outputs) {
+  sample.list <- data.frame()
+  
+  for (i in names(outputs)) {
+    sample.list <-
+      rbind(
+        sample.list,
+        data.frame(
+          sample_id = outputs[[i]][["sample"]],
+          read_pairs = rowSums(outputs[[i]][, 2:ncol(outputs[[i]])]),
+          file = i
+        )
+      )
+  }
+  
+  sample.list[["first"]] <- !duplicated(sample.list[["sample_id"]])
+  
+  row.names(sample.list) <-
+    paste0(sample.list[["sample_id"]], sample.list[["read_pairs"]])
+  sample.list[["maximum"]] <- FALSE
+  sample.list[
+    row.names(sample.list) %in%
+      do.call(paste0, aggregate(read_pairs ~ sample_id, sample.list, max)),
+    "maximum"
+  ] <- TRUE
+  
+  sample.list <- sample.list[order(sample.list[["sample_id"]]), ]
+  row.names(sample.list) <- NULL
+
+  sample.list
+}
+
+
 output.to.long <- function(output, keep.unused.alleles = FALSE) {
   long <-
     reshape(
@@ -28,13 +70,35 @@ output.to.long <- function(output, keep.unused.alleles = FALSE) {
 }
 
 
-merge.outputs <- function(output.files) {
+merge.outputs <- function(outputs, sample.list, how) {
+  sample.list <-
+    switch (
+      how,
+      sum = {
+        sample.list
+      },
+      maximum = {
+        merge(aggregate(read_pairs ~ sample_id, sample.list, max), sample.list)
+      },
+      first = {
+        sample.list[!duplicated(sample.list[["sample_id"]]), ]
+      },
+      stop("Valid options are 'sum', 'maximum', 'first'")
+    )
+  
   longs <- list()
   
-  for (i in seq_along(output.files)) {
-    output.file <- output.files[i]
-    output <- read.delim(output.file, check.names = FALSE)
-    longs[[i]] <- output.to.long(output)
+  for (output.file in names(outputs)) {
+    working.list <- sample.list[sample.list[["file"]] %in% output.file, ]
+    
+    if (nrow(working.list) == 0) {
+      next
+    }
+    
+    output <- outputs[[output.file]]
+    output <- output[output[["sample"]] %in% working.list[["sample_id"]], ]
+    
+    longs[[output.file]] <- output.to.long(output)
   }
   
   long <- do.call(rbind, longs)
@@ -300,27 +364,29 @@ output.files <-
     "another/outputCIGAR.tsv"
   )
 
-# use outputs for complete sample list
-unfiltered.samples <- character()
-for (output.file in output.files) {
-  unfiltered.samples <-
-    c(unfiltered.samples, read.delim(output.file, check.names = FALSE)[["sample"]])
-}
-unfiltered.samples <- sort(unique(unfiltered.samples))
-unfiltered.samples <- data.frame(sample_id = unfiltered.samples)
 
-print(unfiltered.samples)
+outputs <- load.outputs(output.files)
+
+# use outputs for complete sample list
+sample.list <- get.sample.list(outputs)
+
+print(sample.list)
 ## STOP and check the sample list, correct the outputs as necessary
 
-long <- merge.outputs(output.files)
+
+# FIXME: choose an action for samples with the same name in different runs
+# - "sum" the read pairs from different runs
+# - pick the sample with "maximum" read pairs
+# - pick the "first" available sample option (dependent on output.files order)
+long <- merge.outputs(outputs, sample.list, how = "sum")
 
 
 # FIXME: remove samples if needed (e.g. samples from a different cohort)
 removed.samples <- c("sWGA_1_10", "sWGA_1_20", "sWGA_1_30")
 
-unfiltered.samples <-
-  unfiltered.samples[
-    !unfiltered.samples[["sample_id"]] %in% removed.samples,
+sample.list <-
+  sample.list[
+    !sample.list[["sample_id"]] %in% removed.samples,
     ,
     drop = FALSE
   ]
@@ -349,7 +415,7 @@ mhap.filtered <- allele.count.filter(mhap.filtered, allele.count.cutoff)
 mhap.filtered.nloci.per.sample <- calculate.remaining.nloci(mhap.filtered)
 
 mhap.filtered.nloci.per.sample <-
-  merge(mhap.filtered.nloci.per.sample, unfiltered.samples, all.y = TRUE)
+  merge(mhap.filtered.nloci.per.sample, sample.list, all.y = TRUE)
 mhap.filtered.nloci.per.sample[
   is.na(mhap.filtered.nloci.per.sample[["nloci"]]),
   "nloci"

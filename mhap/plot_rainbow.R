@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-## Load all functions by running everything from line 4-101
+## Load all functions by running everything from line 4-111
 decompose.loci <- function(dlong) {
   chrom.pos <- strsplit(dlong[["locus"]], ":")
   chrom <- vapply(chrom.pos, "[[", character(1), 1)

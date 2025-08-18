@@ -239,7 +239,7 @@ rmindel.allele <- function(long) {
   is.outputHaplotypes <- any(grepl("[+-][acgt]+", long[["allele"]]))
   
   if (is.outputCIGAR & is.outputHaplotypes) {
-    stop("Detected both pseudoCIGAR and cs tag, please do not mix them")
+    stop("Detected both pseudoCIGAR and cs tag, please do not mix outputCIGAR.tsv and outputHaplotypes.tsv together")
   }
   if (is.outputCIGAR) {
     long <- .rmindel.allele.outputCIGAR(long)

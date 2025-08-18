@@ -27,8 +27,10 @@ get.sample.list <- function(outputs) {
   
   sample.list[["first"]] <- !duplicated(sample.list[["sample_id"]])
   
+  # make sure the row names are valid
   row.names(sample.list) <-
-    paste0(sample.list[["sample_id"]], sample.list[["read_pairs"]])
+    make.unique(paste0(sample.list[["sample_id"]], sample.list[["read_pairs"]]))
+  
   sample.list[["maximum"]] <- FALSE
   sample.list[
     row.names(sample.list) %in%

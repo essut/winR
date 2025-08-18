@@ -80,13 +80,14 @@ merge.outputs <- function(outputs, sample.list, how) {
         sample.list
       },
       maximum = {
-        merge(aggregate(read_pairs ~ sample_id, sample.list, max), sample.list)
+        sample.list[sample.list[["maximum"]], ]
       },
       first = {
-        sample.list[!duplicated(sample.list[["sample_id"]]), ]
+        sample.list[sample.list[["first"]], ]
       },
       stop("Valid options are 'sum', 'maximum', 'first'")
     )
+  sample.list <- sample.list[, c("sample_id", "read_pairs", "file")]
   
   longs <- list()
   
@@ -106,7 +107,14 @@ merge.outputs <- function(outputs, sample.list, how) {
   long <- do.call(rbind, longs)
   
   # consolidate allele counts from different runs
-  aggregate(count ~ sample_id + locus + allele, long, sum)
+  list(
+    long = aggregate(count ~ sample_id + locus + allele, long, sum),
+    sample.list =
+      merge(
+        aggregate(read_pairs ~ sample_id, sample.list, sum),
+        aggregate(file ~ sample_id, sample.list, function(x) paste(x, collapse = ","))
+      )
+  )
 }
 
 
@@ -380,7 +388,9 @@ print(sample.list)
 # - "sum" the read pairs from different runs
 # - pick the sample with "maximum" read pairs
 # - pick the "first" available sample option (dependent on output.files order)
-long <- merge.outputs(outputs, sample.list, how = "sum")
+merged <- merge.outputs(outputs, sample.list, how = "sum")
+long <- merged[["long"]]
+sample.list <- merged[["sample.list"]]
 
 
 # FIXME: remove samples if needed (e.g. samples from a different cohort)

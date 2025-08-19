@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 library(dcifer)
 
-## Load all functions by running everything from line 5-92
+## Load all functions by running everything from line 5-151
 # use case: alleles in dsmp are not present in the population allele 
 pad.afreq <- function(afreq, dsmp) {
   # assumes the sample allele frequencies are more diverse
@@ -31,6 +31,7 @@ pad.afreq <- function(afreq, dsmp) {
 }
 
 
+# old function to get relatedness estimate from ibdDat
 get.m1.estimate <- function(dres0) {
   dmat <- dres0[, , "estimate"]
   m1.estimate <- as.data.frame(as.table(dmat))
@@ -41,6 +42,7 @@ get.m1.estimate <- function(dres0) {
 }
 
 
+# old function to analyse relatedness of "significantly related" pairs
 analyse.significantly.related.samples <-
   function(dsmp, coi, afreq, dres0, alpha = 0.05) {
     isig <- which(dres0[, , "p_value"] <= alpha, arr.ind = TRUE)[, 2:1]
@@ -69,6 +71,7 @@ analyse.significantly.related.samples <-
   }
 
 
+# old function to retrieve relatedness of all pairs
 calculate.overall.relatedness.estimate <- function(m1.estimate, sig, coi) {
   if (is.null(sig)) {
     mall.estimate <- cbind(m1.estimate, M = NA, rtotal = NA)
@@ -106,6 +109,48 @@ calculate.overall.relatedness.estimate <- function(m1.estimate, sig, coi) {
 }
 
 
+analyse.all.pairs.relatedness <- function(dsmp, coi, afreq, spec) {
+  # setup to run Dcifer in parallel
+  cl <- parallel::makeCluster(spec)
+  on.exit(parallel::stopCluster(cl = cl))
+  parallel::clusterExport(cl = cl, c("dsmp", "coi", "afreq"))
+  
+  indices <- combn(1:length(dsmp), 2, simplify = FALSE)
+  
+  # do not limit number of related pairs (Mmax)
+  res <-
+    parallel::parLapply(
+      cl = cl,
+      indices,
+      function(x) {
+        dcifer::ibdEstM(
+          dsmp[x], coi[x], afreq, Mmax = max(coi), confreg = TRUE, equalr = TRUE
+        )
+      }
+    )
+  
+  pairs <- vapply(indices, function(x) names(dsmp)[x], character(2))
+  coi1 <- vapply(indices, function(x) coi[x[1]], numeric(1))
+  coi2 <- vapply(indices, function(x) coi[x[2]], numeric(1))
+  rhats <- lapply(res, function(x) x[["rhat"]])
+  Ms <- lengths(rhats)
+  rtotals <- vapply(rhats, sum, numeric(1))
+  confints <- vapply(res, function(x) range(x[["confreg"]]), numeric(2))
+  
+  data.frame(
+    sample_id1 = pairs[1, ],
+    sample_id2 = pairs[2, ],
+    coi1 = coi1,
+    coi2 = coi2,
+    M = Ms,
+    rtotal = rtotals,
+    lower_CI = confints[1, ],
+    upper_CI = confints[2, ],
+    scaled_r = rtotals / pmin(coi1, coi2)
+  )
+}
+
+
 ## Run the commands below step-by-step
 ## Change FIXME lines to the appropriate parameters
 
@@ -121,20 +166,11 @@ dsmp <- formatDat(dlong, svar = "sample_id", lvar = "locus", avar = "allele")
 coi   <- getCOI(dsmp)
 afreq <- calcAfreq(dsmp, coi)
 
+# FIXME: adjust the number of threads to use if necessary
+# if not set, will try to use as many threads as possible
+spec <- parallel::detectCores() - 2L
 
-## only one pair of strains between two infections can be related
-dres0 <- ibdDat(dsmp, coi, afreq)
-
-m1.estimate <- get.m1.estimate(dres0)
-
-
-## allow multiple pairs of strains to be related between two infections
-sig <- analyse.significantly.related.samples(dsmp, coi, afreq, dres0)
-
-
-## combine results from restrained and unrestrained M
-mall.estimate <- calculate.overall.relatedness.estimate(m1.estimate, sig, coi)
-
+mall.estimate <- analyse.all.pairs.relatedness(dsmp, coi, afreq, spec)
 
 mall.estimate.file <-
   paste0(output.dir, "/", "mhap_between_relatedness_estimate.tsv")

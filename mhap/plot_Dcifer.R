@@ -63,7 +63,7 @@ pdf(file = between.relatedness.plot.file, width = 4, height = 4)
 
 ggplot(
   mall.estimate.meta.within,
-  aes(x = as.factor(.data[[metadata.group.column]]), y = relatedness)
+  aes(x = as.factor(.data[[metadata.group.column]]), y = scaled_r)
 ) +
   geom_boxplot(outlier.shape = NA) +
   geom_jitter(width = 0.35, height = 0, alpha = 0.5) +
@@ -99,7 +99,7 @@ IBD.thresholds <- sort(IBD.thresholds, decreasing = TRUE)
 
 g <-
   network(
-    mall.estimate.meta[, c("sample_id1", "sample_id2", "relatedness")],
+    mall.estimate.meta[, c("sample_id1", "sample_id2", "scaled_r")],
     directed = FALSE
   )
 
@@ -107,7 +107,7 @@ for (i in seq_along(IBD.thresholds)) {
   IBD.threshold <- IBD.thresholds[i]
   
   net <- network.copy(g)
-  delete.edges(net, which(get.edge.value(net, "relatedness") < IBD.threshold))
+  delete.edges(net, which(get.edge.value(net, "scaled_r") < IBD.threshold))
   
   # make plots reproducible
   set.seed(1)
@@ -117,7 +117,7 @@ for (i in seq_along(IBD.thresholds)) {
     merge(net, metadata, by.x = "vertex.names", by.y = metadata.sample.column, sort = FALSE)
   
   # sort by relatedness to emphasize close relationships
-  net <- net[order(net[["relatedness"]]), ]
+  net <- net[order(net[["scaled_r"]]), ]
   
   threshold.index <- i - 1
 
@@ -127,7 +127,7 @@ for (i in seq_along(IBD.thresholds)) {
   # FIXME: relatedness network framework, adjust metadata as necessary
   print(
     ggplot(net, aes(x, y, xend = xend, yend = yend, fill = as.factor(.data[[metadata.group.column]]))) +
-      geom_edges(aes(colour = relatedness, linewidth = relatedness)) +
+      geom_edges(aes(colour = scaled_r, linewidth = scaled_r)) +
       geom_nodes(size = 5, shape = 21) +
       theme_blank() +
       labs(title = paste0(IBD.threshold * 100, "%"), fill = metadata.group.column) +

@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-## Load all functions by running everything from line 4-350
+## Load all functions by running everything from line 4-365
 load.outputs <- function(output.files) {
   outputs <- list()
   for (output.file in output.files) {
@@ -19,7 +19,7 @@ get.sample.list <- function(outputs) {
         sample.list,
         data.frame(
           sample_id = outputs[[i]][["sample"]],
-          read_pairs = rowSums(outputs[[i]][, 2:ncol(outputs[[i]])]),
+          total_read_pairs = rowSums(outputs[[i]][, 2:ncol(outputs[[i]])]),
           file = i
         )
       )
@@ -29,12 +29,12 @@ get.sample.list <- function(outputs) {
   
   # make sure the row names are valid
   row.names(sample.list) <-
-    make.unique(paste0(sample.list[["sample_id"]], sample.list[["read_pairs"]]))
+    make.unique(paste0(sample.list[["sample_id"]], sample.list[["total_read_pairs"]]))
   
   sample.list[["maximum"]] <- FALSE
   sample.list[
     row.names(sample.list) %in%
-      do.call(paste0, aggregate(read_pairs ~ sample_id, sample.list, max)),
+      do.call(paste0, aggregate(total_read_pairs ~ sample_id, sample.list, max)),
     "maximum"
   ] <- TRUE
   
@@ -87,7 +87,7 @@ merge.outputs <- function(outputs, sample.list, how) {
       },
       stop("Valid options are 'sum', 'maximum', 'first'")
     )
-  sample.list <- sample.list[, c("sample_id", "read_pairs", "file")]
+  sample.list <- sample.list[, c("sample_id", "total_read_pairs", "file")]
   
   longs <- list()
   
@@ -111,7 +111,7 @@ merge.outputs <- function(outputs, sample.list, how) {
     long = aggregate(count ~ sample_id + locus + allele, long, sum),
     sample.list =
       merge(
-        aggregate(read_pairs ~ sample_id, sample.list, sum),
+        aggregate(total_read_pairs ~ sample_id, sample.list, sum),
         aggregate(file ~ sample_id, sample.list, function(x) paste(x, collapse = ","))
       )
   )
@@ -331,7 +331,12 @@ calculate.remaining.nloci <- function(long.filtered) {
   
   names(long.filtered.nloci.per.sample)[2] <- "nloci"
   
-  long.filtered.nloci.per.sample
+  long.filtered.count.per.sample <-
+    aggregate(count ~ sample_id, long.filtered, sum)
+  
+  names(long.filtered.count.per.sample)[2] <- "filtered_read_pairs"
+  
+  merge(long.filtered.nloci.per.sample, long.filtered.count.per.sample)
 }
 
 
@@ -431,6 +436,10 @@ mhap.filtered.nloci.per.sample <-
 mhap.filtered.nloci.per.sample[
   is.na(mhap.filtered.nloci.per.sample[["nloci"]]),
   "nloci"
+] <- 0
+mhap.filtered.nloci.per.sample[
+  is.na(mhap.filtered.nloci.per.sample[["filtered_read_pairs"]]),
+  "filtered_read_pairs"
 ] <- 0
 
 mhap.filtered.nloci.per.sample.text <-

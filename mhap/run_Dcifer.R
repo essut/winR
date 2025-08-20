@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 library(dcifer)
 
-## Load all functions by running everything from line 5-151
+## Load all functions by running everything from line 5-164
 # use case: alleles in dsmp are not present in the population allele 
 pad.afreq <- function(afreq, dsmp) {
   # assumes the sample allele frequencies are more diverse
@@ -109,6 +109,9 @@ calculate.overall.relatedness.estimate <- function(m1.estimate, sig, coi) {
 }
 
 
+# nr is used to control the precision of the relatedness estimate
+# where precision = 1 / nr, be warned that increasing this value
+# will also increase the time and memory required to finish
 analyse.all.pairs.relatedness <-
   function(dsmp, coi, afreq, spec, alpha = 0.05, nr = 1000) {
     # setup to run Dcifer in parallel

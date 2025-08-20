@@ -109,46 +109,56 @@ calculate.overall.relatedness.estimate <- function(m1.estimate, sig, coi) {
 }
 
 
-analyse.all.pairs.relatedness <- function(dsmp, coi, afreq, spec) {
-  # setup to run Dcifer in parallel
-  cl <- parallel::makeCluster(spec)
-  on.exit(parallel::stopCluster(cl = cl))
-  parallel::clusterExport(cl = cl, c("dsmp", "coi", "afreq"))
-  
-  indices <- combn(1:length(dsmp), 2, simplify = FALSE)
-  
-  # do not limit number of related pairs (Mmax)
-  res <-
-    parallel::parLapply(
-      cl = cl,
-      indices,
-      function(x) {
-        dcifer::ibdEstM(
-          dsmp[x], coi[x], afreq, Mmax = max(coi), confreg = TRUE, equalr = TRUE
-        )
-      }
+analyse.all.pairs.relatedness <-
+  function(dsmp, coi, afreq, spec, alpha = 0.05, nr = 1000) {
+    # setup to run Dcifer in parallel
+    cl <- parallel::makeCluster(spec)
+    on.exit(parallel::stopCluster(cl = cl))
+    parallel::clusterExport(
+      cl = cl, c("dsmp", "coi", "afreq", "alpha", "nr"), envir = environment()
     )
-  
-  pairs <- vapply(indices, function(x) names(dsmp)[x], character(2))
-  coi1 <- vapply(indices, function(x) coi[x[1]], numeric(1))
-  coi2 <- vapply(indices, function(x) coi[x[2]], numeric(1))
-  rhats <- lapply(res, function(x) x[["rhat"]])
-  Ms <- lengths(rhats)
-  rtotals <- vapply(rhats, sum, numeric(1))
-  confints <- vapply(res, function(x) range(x[["confreg"]]), numeric(2))
-  
-  data.frame(
-    sample_id1 = pairs[1, ],
-    sample_id2 = pairs[2, ],
-    coi1 = coi1,
-    coi2 = coi2,
-    M = Ms,
-    rtotal = rtotals,
-    lower_CI = confints[1, ],
-    upper_CI = confints[2, ],
-    scaled_r = rtotals / pmin(coi1, coi2)
-  )
-}
+    
+    indices <- combn(1:length(dsmp), 2, simplify = FALSE)
+    
+    # do not limit number of related pairs (Mmax)
+    res <-
+      parallel::parLapply(
+        cl = cl,
+        indices,
+        function(x) {
+          dcifer::ibdEstM(
+            dsmp[x],
+            coi[x],
+            afreq,
+            Mmax = max(coi),
+            confreg = TRUE,
+            alpha = alpha,
+            equalr = TRUE,
+            nrs = nr
+          )
+        }
+      )
+    
+    pairs <- vapply(indices, function(x) names(dsmp)[x], character(2))
+    coi1 <- vapply(indices, function(x) coi[x[1]], numeric(1))
+    coi2 <- vapply(indices, function(x) coi[x[2]], numeric(1))
+    rhats <- lapply(res, function(x) x[["rhat"]])
+    Ms <- lengths(rhats)
+    rtotals <- vapply(rhats, sum, numeric(1))
+    confints <- vapply(res, function(x) range(x[["confreg"]]), numeric(2))
+    
+    data.frame(
+      sample_id1 = pairs[1, ],
+      sample_id2 = pairs[2, ],
+      coi1 = coi1,
+      coi2 = coi2,
+      M = Ms,
+      rtotal = rtotals,
+      lower_CI = confints[1, ],
+      upper_CI = confints[2, ],
+      scaled_r = rtotals / pmin(coi1, coi2)
+    )
+  }
 
 
 ## Run the commands below step-by-step

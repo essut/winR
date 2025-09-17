@@ -101,13 +101,13 @@ data <- moire::load_long_form_data(df)
 
 
 # these default parameters can be adjusted accordingly:
-# burn-in = 500 [burnin], samples per chain = 2,500 [samples_per_chain]
-# parallel tempering chains = 40 [pt_chains]
+# burn-in = 1,000 [burnin], samples per chain = 1,000 [samples_per_chain]
+# parallel tempering chains = 40 chains between 0.5 to 1 [pt_chains]
 # adjust the number of threads [pt_num_threads] accordingly
-burnin <- 500
+burnin <- 1000
 pt_num_threads <- 10
-pt_chains <- 40
-samples_per_chain <- 2500
+pt_chains <- seq(0.5, 1, length.out = 40)
+samples_per_chain <- 1000
 
 mcmc_results <-
   moire::run_mcmc(
@@ -115,6 +115,8 @@ mcmc_results <-
     is_missing = data[["is_missing"]],
     burnin = burnin,
     samples_per_chain = samples_per_chain,
+    r_alpha = 3,
+    r_beta = 3,
     pt_chains = pt_chains,
     pt_num_threads = pt_num_threads
  )

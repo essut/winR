@@ -294,20 +294,33 @@ select.markers <- function(long, keep.marker = "microhaplotype") {
 }
 
 
-allele.proportion.filter <- function(long, allele.proportion.cutoff, on = "total") {
-  if (on %in% "total") {
-    long.wprop <- .calculate.prop.total(long)
-  } else if (on %in% "major") {
-    long.wprop <- .calculate.prop.major(long)
-  } else {
-    stop("Valid options are 'total' or 'major' allele")
+allele.proportion.filter <-
+  function(long, allele.proportion.cutoff, on = "total", how = "naive") {
+    if (on %in% "total") {
+      long.wprop <- .calculate.prop.total(long)
+    } else if (on %in% "major") {
+      long.wprop <- .calculate.prop.major(long)
+    } else {
+      stop("Valid options are 'total' or 'major' allele")
+    }
+    
+    long.wprop.max <- aggregate(prop ~ locus + allele, long.wprop, max)
+    names(long.wprop.max)[3] <- "prop.max"
+    long.wprop <- merge(long.wprop, long.wprop.max)
+    
+    if (how %in% "naive") {
+      how.col <- "prop"
+    } else if (how %in% "population-aware") {
+      how.col <- "prop.max"
+    } else {
+      stop("Valid options are 'naive' or 'population-aware'")
+    }
+    
+    long.wprop[
+      long.wprop[[how.col]] >= allele.proportion.cutoff,
+      c("sample_id", "locus", "allele", "count")
+    ]
   }
-  
-  long.wprop[
-    long.wprop[["prop"]] >= allele.proportion.cutoff,
-    c("sample_id", "locus", "allele", "count")
-  ]
-}
 
 
 allele.count.filter <- function(long, allele.count.cutoff) {
@@ -426,7 +439,7 @@ allele.count.cutoff <- 5 # at least 5 read-pairs needed for each allele
 
 # FIXME: comment any lines below to disable certain filters
 mhap <- select.markers(long, keep.marker = "microhaplotype")
-mhap.filtered <- allele.proportion.filter(mhap, allele.proportion.cutoff, on = "total")
+mhap.filtered <- allele.proportion.filter(mhap, allele.proportion.cutoff, on = "total", how = "naive")
 mhap.filtered <- allele.count.filter(mhap.filtered, allele.count.cutoff)
 # mhap.filtered <- minimum.total.filter(mhap.filtered, minimum.total.cutoff)
 mhap.filtered.nloci.per.sample <- calculate.remaining.nloci(mhap.filtered)

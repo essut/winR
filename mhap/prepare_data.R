@@ -236,7 +236,8 @@ merge.outputs <- function(outputs, sample.list, how) {
 
 rmindel.allele <- function(long) {
   is.outputCIGAR <- any(grepl("[DI]=", long[["allele"]]))
-  is.outputHaplotypes <- any(grepl("[+-][acgt]+", long[["allele"]]))
+  # also remove the indel information at the end
+  is.outputHaplotypes <- any(grepl("([+-][acgt]+|_)", long[["allele"]]))
   
   if (is.outputCIGAR & is.outputHaplotypes) {
     stop("Detected both pseudoCIGAR and cs tag, please do not mix outputCIGAR.tsv and outputHaplotypes.tsv together")

@@ -131,7 +131,7 @@ chain_swaps_plot_file <-
   paste0(output_dir, "/", "mhap_MOIRE_chain_swaps.pdf")
 pdf(file = chain_swaps_plot_file, width = 3, height = 2)
 
-moire::plot_chain_swaps(mcmc_results)
+print(moire::plot_chain_swaps(mcmc_results))
 dev.off()
 
 

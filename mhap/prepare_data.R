@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-## Load all functions by running everything from line 4-387
+## Load all functions by running everything from line 4-494
 load.outputs <- function(output.files) {
   outputs <- list()
   for (output.file in output.files) {
@@ -107,8 +107,8 @@ merge.outputs <- function(outputs, sample.list, how) {
   long <- do.call(rbind, longs)
   
   # check if user supplied different allele formats together
-  is.outputCIGAR <- any(grepl("[.ACGT]", long[["allele"]]))
-  is.outputHaplotypes <- any(grepl("[:acgt]", long[["allele"]]))
+  is.outputCIGAR <- any(grepl("(\\.|[0-9][ACGT])", long[["allele"]]))
+  is.outputHaplotypes <- any(grepl("[:*]", long[["allele"]]))
   
   if (is.outputCIGAR & is.outputHaplotypes) {
     stop("Detected both pseudoCIGAR and cs tag, please do not mix outputCIGAR.tsv and outputHaplotypes.tsv together")
@@ -347,24 +347,131 @@ minimum.total.filter <- function(long, minimum.total.cutoff) {
 }
 
 
-calculate.remaining.nloci <- function(long.filtered) {
-  long.filtered.nloci.per.sample <-
-    aggregate(locus ~ sample_id, long.filtered, function(x) length(unique(x)))
+calculate.allele.statistics <- function(long) {
+  chrom.pos <- strsplit(long[["locus"]], ":")
+  chrom <- vapply(chrom.pos, "[[", character(1), 1)
+  pos <- vapply(chrom.pos, "[[", character(1), 2)
+  marker <- vapply(chrom.pos, "[[", character(1), 3)
   
-  names(long.filtered.nloci.per.sample)[2] <- "nloci"
+  start.end <- strsplit(pos, "-")
+  start <- as.numeric(vapply(start.end, "[[", character(1), 1))
+  end <- as.numeric(vapply(start.end, "[[", character(1), 2))
   
-  long.filtered.count.per.sample <-
-    aggregate(count ~ sample_id, long.filtered, sum)
+  long <-
+    data.frame(
+      chromosome = chrom,
+      start.pos = start,
+      end.pos = end,
+      marker = marker,
+      long
+    )
   
-  names(long.filtered.count.per.sample)[2] <- "filtered_read_pairs"
+  long.allele.statistics <-
+    aggregate(
+      sample_id ~ chromosome + start.pos + end.pos + marker + locus + allele,
+      long,
+      length
+    )
+  names(long.allele.statistics)[7] <- "nsample"
   
-  merge(long.filtered.nloci.per.sample, long.filtered.count.per.sample)
+  long.allele.count <- as.data.frame(table(long[["locus"]]))
+  names(long.allele.count) <- c("locus", "total.allele")
+  
+  long.allele.statistics <-
+    merge(long.allele.statistics, long.allele.count, sort = FALSE)
+  
+  long.allele.statistics["prop.allele"] <-
+    long.allele.statistics[["nsample"]] /
+    long.allele.statistics[["total.allele"]]
+  
+  long.allele.statistics
 }
 
 
-plot.remaining.nloci <- function(long.filtered.nloci.per.sample, minimum.nloci) {
+plot.prop.allele <-
+  function(long.allele.statistics, prop.allele.cutoff = -Inf) {
+    hist(
+      long.allele.statistics[["prop.allele"]],
+      breaks = "FD",
+      right = FALSE,
+      main = "Proportion of alleles",
+      xlab = NULL
+    )
+    
+    abline(v = prop.allele.cutoff, col = "red", lty = "dashed")
+  }
+
+
+plot.nsample.per.allele <-
+  function(long.allele.statistics, nsample.per.allele.cutoff = -Inf) {
+    hist(
+      long.allele.statistics[["nsample"]],
+      breaks = "FD",
+      right = FALSE,
+      main = "Number of sample per allele",
+      xlab = NULL
+    )
+    
+    abline(v = nsample.per.allele.cutoff + 1, col = "red", lty = "dashed")
+  }
+
+
+prop.allele.filter <-
+  function(long, long.allele.statistics, prop.allele.cutoff) {
+    
+    pass.prop.allele <- 
+      long.allele.statistics[
+        long.allele.statistics[["prop.allele"]] >= prop.allele.cutoff,
+        c("locus", "allele")
+      ]
+    
+    long <- merge(long, pass.prop.allele, sort = FALSE)
+    long[, c("sample_id", "locus", "allele", "count")]
+  }
+
+
+nsample.per.allele.filter <-
+  function(long, long.allele.statistics, nsample.per.allele.cutoff) {
+    
+    pass.nsample.per.allele <- 
+      long.allele.statistics[
+        long.allele.statistics[["nsample"]] >= nsample.per.allele.cutoff,
+        c("locus", "allele")
+      ]
+    
+    long <- merge(long, pass.nsample.per.allele, sort = FALSE)
+    long[, c("sample_id", "locus", "allele", "count")]
+  }
+
+
+minimum.total.filter <- function(long, minimum.total.cutoff) {
+  long.counts.per.locus <- aggregate(count ~ sample_id + locus, long, sum)
+  
+  pass.filter <-
+    long.counts.per.locus[long.counts.per.locus[["count"]] >= minimum.total.cutoff, ]
+  
+  merge(long, pass.filter[, c("sample_id", "locus")], sort = FALSE)
+}
+
+
+calculate.remaining.nloci <- function(long) {
+  long.nloci.per.sample <-
+    aggregate(locus ~ sample_id, long, function(x) length(unique(x)))
+  
+  names(long.nloci.per.sample)[2] <- "nloci"
+  
+  long.count.per.sample <-
+    aggregate(count ~ sample_id, long, sum)
+  
+  names(long.count.per.sample)[2] <- "filtered_read_pairs"
+  
+  merge(long.nloci.per.sample, long.count.per.sample)
+}
+
+
+plot.remaining.nloci <- function(long.nloci.per.sample, minimum.nloci) {
   plot(
-    sort(long.filtered.nloci.per.sample[["nloci"]]),
+    sort(long.nloci.per.sample[["nloci"]]),
     main = NA,
     xlab = NA,
     ylab = "Remaining number of locus",
@@ -376,14 +483,14 @@ plot.remaining.nloci <- function(long.filtered.nloci.per.sample, minimum.nloci) 
 
 
 filter.failed.samples <-
-  function(long.filtered, long.filtered.nloci.per.sample, minimum.nloci) {
+  function(long, long.nloci.per.sample, minimum.nloci) {
     pass.samples <-
-      long.filtered.nloci.per.sample[
-        long.filtered.nloci.per.sample[["nloci"]] >= minimum.nloci,
+      long.nloci.per.sample[
+        long.nloci.per.sample[["nloci"]] >= minimum.nloci,
         "sample_id"
       ]
     
-    long.filtered[long.filtered[["sample_id"]] %in% pass.samples, ]
+    long[long[["sample_id"]] %in% pass.samples, ]
   }
 
 
@@ -420,8 +527,7 @@ long <- merged[["long"]]
 sample.list <- merged[["sample.list"]]
 
 
-# FIXME: example on how to change sample IDs based on notes from above
-# uncomment if needed
+# FIXME: example on how to change sample IDs based on above notes
 # long[long[["sample_id"]] %in% "Human-AT2", "sample_id"] <- "NC"
 # long[long[["sample_id"]] %in% "NTC-1xTE", "sample_id"] <- "EMPTY"
 # long[long[["sample_id"]] %in% "Pf-K1", "sample_id"] <- "NC"
@@ -447,7 +553,7 @@ write.table(long, long.file, quote = FALSE, sep = "\t", row.names = FALSE)
 
 mhap.filtered <- select.markers(long, keep.marker = "microhaplotype")
 
-## FIXME: comment any lines below to disable certain filters
+## FIXME: comment/uncomment any lines below to disable/enable filters
 ## FIXME: also, feel free to reorder filters as needed
 
 # FIXME: remove insertions and deletions in alleles
@@ -457,7 +563,7 @@ mhap.filtered <- rmindel.allele(mhap.filtered)
 # minimum.total.cutoff <- 10 # at least 10 read-pairs in total per locus per sample
 # mhap.filtered <- minimum.total.filter(mhap.filtered, minimum.total.cutoff)
 
-# FIXME: filter alleles with less than X% proportion-wise per sample
+# FIXME: filter alleles with less than X% proportion per sample
 # FIXME: in relation to total allele (on = "total") or major allele (on = "major")
 allele.proportion.cutoff <- 0.02 # at least 2% allele proportion per sample
 allele.proportion.on <- "total" # per locus instead of per major allele
@@ -473,6 +579,49 @@ mhap.filtered <-
 allele.count.cutoff <- 5 # at least 5 read-pairs needed for each allele per sample
 mhap.filtered <- allele.count.filter(mhap.filtered, allele.count.cutoff)
 
+
+mhap.filtered.allele.statistics <- calculate.allele.statistics(mhap.filtered)
+
+mhap.filtered.allele.statistics.text <-
+  paste0(output.dir, "/", "mhap_filtered_allele_statistics.tsv")
+
+write.table(
+  mhap.filtered.allele.statistics,
+  mhap.filtered.allele.statistics.text,
+  quote = FALSE,
+  sep = "\t",
+  row.names = FALSE
+)
+
+mhap.filtered.prop.allele.figure <-
+  paste0(output.dir, "/", "mhap_filtered_prop_allele.pdf")
+
+pdf(file = mhap.filtered.prop.allele.figure)
+plot.prop.allele(mhap.filtered.allele.statistics)
+dev.off()
+
+mhap.filtered.nsample.per.allele.figure <-
+  paste0(output.dir, "/", "mhap_filtered_nsample_per_allele.pdf")
+
+pdf(file = mhap.filtered.nsample.per.allele.figure)
+plot.nsample.per.allele(mhap.filtered.allele.statistics)
+dev.off()
+
+# FIXME: filter alleles with less than X% proportion per marker
+# prop.allele.cutoff <- 0.01 # alleles contribute to at least 1% of total alleles
+# mhap.filtered <-
+#   prop.allele.filter(mhap.filtered, mhap.filtered.allele.statistics, prop.allele.cutoff)
+
+# FIXME: filter alleles with less than X samples
+# nsample.per.allele.cutoff <- 2 # alleles observed in at least 2 samples
+# mhap.filtered <-
+#   nsample.per.allele.filter(
+#     mhap.filtered,
+#     mhap.filtered.allele.statistics,
+#     nsample.per.allele.cutoff
+#   )
+
+## END of filtering functions
 
 mhap.filtered.nloci.per.sample <- calculate.remaining.nloci(mhap.filtered)
 

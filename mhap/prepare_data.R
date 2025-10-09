@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-## Load all functions by running everything from line 4-365
+## Load all functions by running everything from line 4-387
 load.outputs <- function(output.files) {
   outputs <- list()
   for (output.file in output.files) {
@@ -105,6 +105,14 @@ merge.outputs <- function(outputs, sample.list, how) {
   }
   
   long <- do.call(rbind, longs)
+  
+  # check if user supplied different allele formats together
+  is.outputCIGAR <- any(grepl("[.ACGT]", long[["allele"]]))
+  is.outputHaplotypes <- any(grepl("[:acgt]", long[["allele"]]))
+  
+  if (is.outputCIGAR & is.outputHaplotypes) {
+    stop("Detected both pseudoCIGAR and cs tag, please do not mix outputCIGAR.tsv and outputHaplotypes.tsv together")
+  }
   
   # consolidate allele counts from different runs
   list(

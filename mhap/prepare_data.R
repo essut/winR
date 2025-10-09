@@ -432,25 +432,40 @@ sample.list <-
 
 long <- long[!long[["sample_id"]] %in% removed.samples, ]
 
-  
-# FIXME: comment the line below if you want to keep insertions and deletions in alleles
-long <- rmindel.allele(long)
-
 long.file <- paste0(output.dir, "/", "long_unfiltered.tsv")
 
 write.table(long, long.file, quote = FALSE, sep = "\t", row.names = FALSE)
 
 
-# FIXME: change read-pair threshold for failed genotype
-allele.proportion.cutoff <- 0.02 # allele proportion is at least 2% per locus per sample
-allele.count.cutoff <- 5 # at least 5 read-pairs needed for each allele
-# minimum.total.cutoff <- 10 # at least 10 read-pairs in total per locus per sample
+mhap.filtered <- select.markers(long, keep.marker = "microhaplotype")
 
-# FIXME: comment any lines below to disable certain filters
-mhap <- select.markers(long, keep.marker = "microhaplotype")
-mhap.filtered <- allele.proportion.filter(mhap, allele.proportion.cutoff, on = "total", how = "naive")
-mhap.filtered <- allele.count.filter(mhap.filtered, allele.count.cutoff)
+## FIXME: comment any lines below to disable certain filters
+## FIXME: also, feel free to reorder filters as needed
+
+# FIXME: remove insertions and deletions in alleles
+mhap.filtered <- rmindel.allele(mhap.filtered)
+
+# FIXME: filter locus with less than X read-pairs per sample
+# minimum.total.cutoff <- 10 # at least 10 read-pairs in total per locus per sample
 # mhap.filtered <- minimum.total.filter(mhap.filtered, minimum.total.cutoff)
+
+# FIXME: filter alleles with less than X% proportion-wise per sample
+# FIXME: in relation to total allele (on = "total") or major allele (on = "major")
+allele.proportion.cutoff <- 0.02 # at least 2% allele proportion per sample
+allele.proportion.on <- "total" # per locus instead of per major allele
+mhap.filtered <-
+  allele.proportion.filter(
+    mhap.filtered,
+    allele.proportion.cutoff,
+    on = allele.proportion.on,
+    how = "naive"
+  )
+
+# FIXME: filter alleles with less than X read-pairs per sample
+allele.count.cutoff <- 5 # at least 5 read-pairs needed for each allele per sample
+mhap.filtered <- allele.count.filter(mhap.filtered, allele.count.cutoff)
+
+
 mhap.filtered.nloci.per.sample <- calculate.remaining.nloci(mhap.filtered)
 
 mhap.filtered.nloci.per.sample <-

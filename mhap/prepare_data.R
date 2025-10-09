@@ -400,7 +400,7 @@ outputs <- load.outputs(output.files)
 sample.list <- get.sample.list(outputs)
 
 print(sample.list)
-## STOP and check the sample list, correct the outputs as necessary
+## STOP and check the sample list, take notes on what needs to be changed
 
 
 # FIXME: choose an action for samples with the same name in different runs
@@ -410,6 +410,14 @@ print(sample.list)
 merged <- merge.outputs(outputs, sample.list, how = "sum")
 long <- merged[["long"]]
 sample.list <- merged[["sample.list"]]
+
+
+# FIXME: example on how to change sample IDs based on notes from above
+# uncomment if needed
+# long[long[["sample_id"]] %in% "Human-AT2", "sample_id"] <- "NC"
+# long[long[["sample_id"]] %in% "NTC-1xTE", "sample_id"] <- "EMPTY"
+# long[long[["sample_id"]] %in% "Pf-K1", "sample_id"] <- "NC"
+# long <- aggregate(count ~ sample_id + locus + allele, long, sum)
 
 
 # FIXME: remove samples if needed (e.g. samples from a different cohort)
@@ -446,7 +454,7 @@ mhap.filtered <- allele.count.filter(mhap.filtered, allele.count.cutoff)
 mhap.filtered.nloci.per.sample <- calculate.remaining.nloci(mhap.filtered)
 
 mhap.filtered.nloci.per.sample <-
-  merge(mhap.filtered.nloci.per.sample, sample.list, all.y = TRUE)
+  merge(mhap.filtered.nloci.per.sample, sample.list, all = TRUE)
 mhap.filtered.nloci.per.sample[
   is.na(mhap.filtered.nloci.per.sample[["nloci"]]),
   "nloci"

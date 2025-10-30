@@ -8,7 +8,7 @@ create.allele.matrix <- function(dlong) {
   # calls the major allele in each locus for each sample
   dlong.major <-
     merge(aggregate(count ~ sample_id + locus, data = dlong, max), dlong)
-  
+
   # convert as a matrix, randomly picks one allele if multiple exists
   dlong.major.wide <-
     reshape(
@@ -17,10 +17,10 @@ create.allele.matrix <- function(dlong) {
       idvar = "sample_id",
       timevar = "locus"
     )
-  
+
   row.names(dlong.major.wide) <- dlong.major.wide[["sample_id"]]
   dlong.major.wide[["sample_id"]] <- NULL
-  
+
   return(dlong.major.wide)
 }
 
@@ -29,7 +29,7 @@ calculate.missingness <- function(dlong.major.wide) {
   missing.alleles <- is.na(dlong.major.wide)
   missing.locus.per.sample <- rowSums(missing.alleles)
   missing.sample.per.locus <- colSums(missing.alleles)
-  
+
   return(
     list(
       missing.locus.per.sample = missing.locus.per.sample,
@@ -53,7 +53,7 @@ plot.missing.sample.per.locus <-
       main = "Number of missing sample per locus",
       xlab = NULL
     )
-    
+
     abline(v = missing.sample.per.locus.cutoff + 1, col = "red", lty = "dashed")
   }
 
@@ -67,7 +67,7 @@ plot.missing.locus.per.sample <-
       main = "Number of missing locus per sample",
       xlab = NULL
     )
-    
+
     abline(v = missing.locus.per.sample.cutoff + 1, col = "red", lty = "dashed")
   }
 
@@ -79,25 +79,25 @@ plot.missing.locus.per.sample <-
     tapply(edge.groups[, 1], edges[, 1], function(x) {
       # retrieve children's groups
       unique.groups <- na.omit(unique(x))
-      
+
       # if the children's groups are mixed
       if (mixed.group %in% unique.groups) {
         return(mixed.group)
       }
-      
+
       unique.length <- length(unique.groups)
-      
+
       # if no information about the children's groups
       # we'll return back to this parent later
       if (unique.length == 0) {
         return(NA)
       }
-      
+
       # if the children only have one group
       if (unique.length == 1) {
         return(unique.groups)
       }
-      
+
       # if the children have multiple groups
       return(mixed.group)
     })
@@ -107,9 +107,9 @@ plot.missing.locus.per.sample <-
   function(edge.groups, edges, mixed.group) {
     parents.groups <-
       .compute.parents.groups(edge.groups, edges, mixed.group)
-    
+
     parent.as.child <- match(edges[, 2], names(parents.groups))
-    
+
     # if the parents are children of other parents,
     # carry the group of parents as the child's group
     edge.groups[, 2] <-
@@ -124,28 +124,28 @@ plot.missing.locus.per.sample <-
         x = edge.groups[, 2],
         y = parents.groups[parent.as.child]
       )
-    
+
     edge.groups[, 1] <- edge.groups[, 2]
-    
+
     edge.groups
   }
 
 group.NJ <- function(NJ, tip.groups, mixed.group) {
   edges <- NJ[["edge"]]
-  
+
   # copy available tip groups as edge groups
   edge.groups <- tip.groups[edges]
-  
+
   # copy groups on the tip to its direct parent
   dim(edge.groups) <- dim(edges)
   edge.groups[, 1] <- edge.groups[, 2]
-  
+
   # trace back parent groups until they meet different groups
   while (sum(is.na(edge.groups))) {
     edge.groups <-
       .update.parents.groups(edge.groups, edges, mixed.group)
   }
-  
+
   # finalise edge groups
   .update.parents.groups(edge.groups, edges, mixed.group)
 }
@@ -180,8 +180,7 @@ dlong <-
   dlong[
     dlong[["sample_id"]] %in%
       polyclonal.status[!polyclonal.status[["is_polyclonal"]], "sample_id"],
-    
-    ]
+  ]
 
 dlong.major.wide <- create.allele.matrix(dlong)
 dlong.major.wide.missingness <- calculate.missingness(dlong.major.wide)
@@ -210,8 +209,7 @@ dev.off()
 ## check if happy with the cutoff for missing sample per locus
 ## if not, go back and change the cutoff
 dlong.major.wide.locfilt <-
-  dlong.major.wide[
-    ,
+  dlong.major.wide[,
     dlong.major.wide.missingness[["missing.sample.per.locus"]] <=
       missing.sample.per.locus.cutoff
   ]
@@ -246,8 +244,7 @@ dev.off()
 dlong.major.wide.locfilt.samfilt <-
   dlong.major.wide.locfilt[
     dlong.major.wide.locfilt.missingness[["missing.locus.per.sample"]] <=
-      missing.locus.per.sample.cutoff
-    ,
+      missing.locus.per.sample.cutoff,
   ]
 
 
@@ -306,10 +303,14 @@ m <- combn(n.axis, 2)
 for (j in seq_len(ncol(m))) {
   x <- m[1, j]
   y <- m[2, j]
-  
+
   # FIXME: adjust size (in inches) of PCoA plot
-  pdf(paste0(PCoA.prefix.filename, "_", x, "_", y, ".pdf"), width = 5, height = 5)
-  
+  pdf(
+    paste0(PCoA.prefix.filename, "_", x, "_", y, ".pdf"),
+    width = 5,
+    height = 5
+  )
+
   # FIXME: adjust PCoA framework as required
   print(
     ggplot(
@@ -324,26 +325,40 @@ for (j in seq_len(ncol(m))) {
       theme_classic() +
       labs(colour = metadata.group.column) +
       theme(legend.position = "bottom") +
-      xlab(paste0("Coordinate ", x, " (", round(Broken_stick[x], digits = 2), "%)")) +
-      ylab(paste0("Coordinate ", y, " (", round(Broken_stick[y], digits = 2), "%)")) +
+      xlab(paste0(
+        "Coordinate ",
+        x,
+        " (",
+        round(Broken_stick[x], digits = 2),
+        "%)"
+      )) +
+      ylab(paste0(
+        "Coordinate ",
+        y,
+        " (",
+        round(Broken_stick[y], digits = 2),
+        "%)"
+      )) +
       scale_colour_manual(breaks = levels(z), values = palette) +
       guides(colour = guide_legend(override.aes = list(alpha = 1)))
   )
-  
+
   dev.off()
 }
 
 
 ## lines below create NJ plots
 tr <- nj(dist)
-cls <- setNames(metadata[[metadata.group.column]], metadata[[metadata.sample.column]])
+cls <- setNames(
+  metadata[[metadata.group.column]],
+  metadata[[metadata.sample.column]]
+)
 tip.groups <- cls[tr[["tip.label"]]]
 
 tip.colours <- palette[as.character(tip.groups)]
 edge.colours <- group.NJ(tr, tip.colours, "#E5E4E2")
 ## if the script hangs at edge.colours,
 ## there is probably a sample with no available metadata
-
 
 NJ.prefix.filename <- paste0(output.dir, "/", "mhap_NJ")
 
@@ -376,7 +391,11 @@ dev.off()
 
 ## unrooted, unlabelled
 # FIXME: adjust size (in inches) of NJ plot
-pdf(paste0(NJ.prefix.filename, "_unrooted_unlabelled.pdf"), width = 7, height = 7.5)
+pdf(
+  paste0(NJ.prefix.filename, "_unrooted_unlabelled.pdf"),
+  width = 7,
+  height = 7.5
+)
 par(xpd = TRUE)
 
 plot(

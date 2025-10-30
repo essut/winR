@@ -14,12 +14,19 @@ diversities.file <- "location/to/paneljudge/mhap_paneljudge_diversities.tsv"
 
 diversities <- read.delim(diversities.file)
 
-diversities.plot.file <- paste0(output.dir, "/", "mhap_paneljudge_diversities.pdf")
+diversities.plot.file <- paste0(
+  output.dir,
+  "/",
+  "mhap_paneljudge_diversities.pdf"
+)
 
 # FIXME: adjust size (in inches) of paneljudge diversities plot
 pdf(file = diversities.plot.file, width = 4, height = 4)
 
-ggplot(diversities, aes(x = as.factor(.data[[metadata.group.column]]), y = diversity)) +
+ggplot(
+  diversities,
+  aes(x = as.factor(.data[[metadata.group.column]]), y = diversity)
+) +
   geom_boxplot(outlier.shape = NA) +
   geom_jitter(width = 0.3, height = 0, alpha = 0.5) +
   ylim(0, 1) +
@@ -41,7 +48,10 @@ eff.cardinalities.plot.file <-
 # FIXME: adjust size (in inches) of paneljudge effective cardinalities plot
 pdf(file = eff.cardinalities.plot.file, width = 4, height = 4)
 
-ggplot(eff.cardinalities, aes(x = as.factor(.data[[metadata.group.column]]), y = eff_cardinality)) +
+ggplot(
+  eff.cardinalities,
+  aes(x = as.factor(.data[[metadata.group.column]]), y = eff_cardinality)
+) +
   geom_boxplot(outlier.shape = NA) +
   geom_jitter(width = 0.3, height = 0, alpha = 0.5) +
   xlab(metadata.group.column) +
@@ -74,7 +84,12 @@ ggplot(rmse.krhats, aes(x = r, y = RMSE)) +
   geom_point() +
   geom_line() +
   xlab(expression(paste("data-generating ", italic(r)))) +
-  ylab(expression(paste("RMSE of ", italic(hat(r)), " around data-generating ", italic(r)))) +
+  ylab(expression(paste(
+    "RMSE of ",
+    italic(hat(r)),
+    " around data-generating ",
+    italic(r)
+  ))) +
   theme_classic()
 
 dev.off()

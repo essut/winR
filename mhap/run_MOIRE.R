@@ -4,7 +4,7 @@
 run_initial_mcmc <-
   function(data, nchain = 4, burnin = 1000, samples_per_chain = 1000) {
     cl <- parallel::makeCluster(spec = nchain)
-    
+
     initial_mcmcs <-
       parallel::clusterCall(
         cl = cl,
@@ -14,20 +14,20 @@ run_initial_mcmc <-
         burnin = burnin,
         samples_per_chain = samples_per_chain
       )
-    
+
     parallel::stopCluster(cl = cl)
-    
+
     initial_mcmc <- list()
     initial_mcmc[["chains"]] <-
       lapply(initial_mcmcs, function(x) x[["chains"]][[1]])
-    
+
     initial_mcmc
   }
 
 plot.posterior.burnin.trace <- function(mcmc_results) {
   for (i in seq_along(mcmc_results[["chains"]])) {
     chain <- mcmc_results[["chains"]][[i]]
-    
+
     plot(
       chain[["posterior_burnin"]],
       type = "l",
@@ -41,7 +41,7 @@ plot.posterior.burnin.trace <- function(mcmc_results) {
 plot.posterior.sample.trace <- function(mcmc_results) {
   for (i in seq_along(mcmc_results[["chains"]])) {
     chain <- mcmc_results[["chains"]][[i]]
-    
+
     plot(
       chain[["posterior_sample"]],
       type = "l",
@@ -55,7 +55,7 @@ plot.posterior.sample.trace <- function(mcmc_results) {
 plot.posterior.sample.density <- function(mcmc_results) {
   for (i in seq_along(mcmc_results[["chains"]])) {
     chain <- mcmc_results[["chains"]][[i]]
-    
+
     plot(
       density(chain[["posterior_sample"]], bw = "SJ"),
       main = paste0("Chain ", i),
@@ -67,14 +67,14 @@ plot.posterior.sample.density <- function(mcmc_results) {
 plot.posterior.sample.acf <- function(mcmc_results) {
   for (i in seq_along(mcmc_results[["chains"]])) {
     chain <- mcmc_results[["chains"]][[i]]
-    
+
     acf <-
       acf(
         chain[["posterior_sample"]],
         lag.max = length(chain[["posterior_sample"]]) / 5,
         plot = FALSE
       )
-    
+
     plot(
       acf,
       main = paste0("Chain ", i),
@@ -119,7 +119,7 @@ mcmc_results <-
     r_beta = 3,
     pt_chains = pt_chains,
     pt_num_threads = pt_num_threads
- )
+  )
 
 file <- paste0(output_dir, "/", "mhap_MOIRE.rds")
 
@@ -166,8 +166,7 @@ dev.off()
 
 ## STOP and determine if the MCMC parameters need to be re-adjusted
 ## https://www.statlect.com/fundamentals-of-statistics/Markov-Chain-Monte-Carlo-diagnostics
-## section: Trace plots & Autocorrelation function (ACF) plots 
-
+## section: Trace plots & Autocorrelation function (ACF) plots
 
 coi_summary_file <- paste0(output_dir, "/", "mhap_COI_summary.tsv")
 
@@ -198,7 +197,11 @@ write.table(
 )
 
 
-effective_coi_summary_file <- paste0(output_dir, "/", "mhap_effective_COI_summary.tsv")
+effective_coi_summary_file <- paste0(
+  output_dir,
+  "/",
+  "mhap_effective_COI_summary.tsv"
+)
 
 effective_coi_summary <- moire::summarize_effective_coi(mcmc_results)
 write.table(

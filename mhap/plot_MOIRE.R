@@ -3,7 +3,10 @@ library(readxl)
 library(ggplot2)
 
 ## Load all functions by running everything from line 6-28
-calculate_polyclonal_prevalence <- function(polyclonal_status, metadata_group_column) {
+calculate_polyclonal_prevalence <- function(
+  polyclonal_status,
+  metadata_group_column
+) {
   n_polyclonal <-
     aggregate(
       polyclonal_status["is_polyclonal"],
@@ -16,14 +19,16 @@ calculate_polyclonal_prevalence <- function(polyclonal_status, metadata_group_co
       polyclonal_status[metadata_group_column],
       length
     )
-  
+
   polyclonal_prevalence <-
     merge(n_polyclonal, n_total, by = metadata_group_column, sort = FALSE)
   names(polyclonal_prevalence)[2:3] <- c("n_polyclonal", "n_total")
-  
+
   polyclonal_prevalence[["pc_polyclonal"]] <-
-    polyclonal_prevalence[["n_polyclonal"]] / polyclonal_prevalence[["n_total"]] * 100
-  
+    polyclonal_prevalence[["n_polyclonal"]] /
+    polyclonal_prevalence[["n_total"]] *
+    100
+
   return(polyclonal_prevalence)
 }
 
@@ -88,7 +93,6 @@ effective_coi_summary <-
 
 ## STOP and check the number of samples remaining after the previous steps
 
-
 coi_plot_file <- paste0(output_dir, "/", "mhap_COI.pdf")
 
 # FIXME: adjust plotting template if necessary
@@ -152,13 +156,18 @@ pdf(file = effective_coi_plot_file, width = 4, height = 4)
 
 ggplot(
   effective_coi_summary,
-  aes(x = as.factor(.data[[metadata_group_column]]), y = post_effective_coi_mean)
+  aes(
+    x = as.factor(.data[[metadata_group_column]]),
+    y = post_effective_coi_mean
+  )
 ) +
   geom_boxplot(outlier.shape = NA) +
   geom_jitter(width = 0.35, height = 0, alpha = 0.5) +
   xlab(metadata_group_column) +
   ylab("eMOI") +
   theme_classic() +
-  scale_y_continuous(breaks = 1:ceiling(max(effective_coi_summary[["post_effective_coi_mean"]])))
+  scale_y_continuous(
+    breaks = 1:ceiling(max(effective_coi_summary[["post_effective_coi_mean"]]))
+  )
 
 dev.off()

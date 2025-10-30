@@ -24,7 +24,6 @@ mall.estimate <- read.delim(mall.estimate.file)
 ## STOP and make sure the metadata has the ID in the first column
 ## the ID must be the ones used in Dcifer analysis
 
-
 # FIXME: change according sample and group column in metadata
 metadata.sample.column <- "ID"
 metadata.group.column <- "Year"
@@ -49,7 +48,6 @@ mall.estimate.meta.within <-
   mall.estimate.meta[
     mall.estimate.meta[[paste0(metadata.group.column, ".x")]] ==
       mall.estimate.meta[[paste0(metadata.group.column, ".y")]],
-    
   ]
 
 mall.estimate.meta.within[[metadata.group.column]] <-
@@ -92,7 +90,7 @@ palette <- setNames(cols[1:nlevels(z)], levels(z))
 prefix.filename <- paste0(output.dir, "/", "mhap_network")
 
 # FIXME: adjust the IBD thresholds as needed
-IBD.thresholds <- c(1, 1/2, 1/4, 1/8, 1/16) * 0.95
+IBD.thresholds <- c(1, 1 / 2, 1 / 4, 1 / 8, 1 / 16) * 0.95
 
 # make sure the IBD thresholds are in decreasing order
 IBD.thresholds <- sort(IBD.thresholds, decreasing = TRUE)
@@ -105,32 +103,54 @@ g <-
 
 for (i in seq_along(IBD.thresholds)) {
   IBD.threshold <- IBD.thresholds[i]
-  
+
   net <- network.copy(g)
   delete.edges(net, which(get.edge.value(net, "scaled_r") < IBD.threshold))
-  
+
   # make plots reproducible
   set.seed(1)
   net <- ggnetwork(net)
-  
+
   net <-
-    merge(net, metadata, by.x = "vertex.names", by.y = metadata.sample.column, sort = FALSE)
-  
+    merge(
+      net,
+      metadata,
+      by.x = "vertex.names",
+      by.y = metadata.sample.column,
+      sort = FALSE
+    )
+
   # sort by relatedness to emphasize close relationships
   net <- net[order(net[["scaled_r"]]), ]
-  
+
   threshold.index <- i - 1
 
   # FIXME: adjust size (in inches) of network plot
-  pdf(paste0(prefix.filename, "_", IBD.threshold, ".pdf"), width = 9, height = 8)
-  
+  pdf(
+    paste0(prefix.filename, "_", IBD.threshold, ".pdf"),
+    width = 9,
+    height = 8
+  )
+
   # FIXME: relatedness network framework, adjust metadata as necessary
   print(
-    ggplot(net, aes(x, y, xend = xend, yend = yend, fill = as.factor(.data[[metadata.group.column]]))) +
+    ggplot(
+      net,
+      aes(
+        x,
+        y,
+        xend = xend,
+        yend = yend,
+        fill = as.factor(.data[[metadata.group.column]])
+      )
+    ) +
       geom_edges(aes(colour = scaled_r, linewidth = scaled_r)) +
       geom_nodes(size = 5, shape = 21) +
       theme_blank() +
-      labs(title = paste0(IBD.threshold * 100, "%"), fill = metadata.group.column) +
+      labs(
+        title = paste0(IBD.threshold * 100, "%"),
+        fill = metadata.group.column
+      ) +
       guides(linewidth = "none") +
       scale_fill_manual(breaks = levels(z), values = palette) +
       # using low and high colours of Greys palette from ColorBrewer
@@ -150,6 +170,6 @@ for (i in seq_along(IBD.thresholds)) {
         range = c(0.5, 4)
       )
   )
-  
+
   dev.off()
 }

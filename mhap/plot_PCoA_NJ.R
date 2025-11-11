@@ -282,7 +282,7 @@ palette <- setNames(cols[1:nlevels(z)], levels(z))
 
 res <- pcoa(dist)
 vectors <- res[["vectors"]]
-Broken_stick <- res[["values"]][["Broken_stick"]] * 100
+Relative_eig <- res[["values"]][["Relative_eig"]] * 100
 
 
 data <-
@@ -329,14 +329,14 @@ for (j in seq_len(ncol(m))) {
         "Coordinate ",
         x,
         " (",
-        round(Broken_stick[x], digits = 2),
+        round(Relative_eig[x], digits = 2),
         "%)"
       )) +
       ylab(paste0(
         "Coordinate ",
         y,
         " (",
-        round(Broken_stick[y], digits = 2),
+        round(Relative_eig[y], digits = 2),
         "%)"
       )) +
       scale_colour_manual(breaks = levels(z), values = palette) +

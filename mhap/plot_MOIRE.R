@@ -2,7 +2,7 @@
 library(readxl)
 library(ggplot2)
 
-## Load all functions by running everything from line 6-28
+## Load all functions by running everything from line 6-48
 calculate_polyclonal_prevalence <- function(
   polyclonal_status,
   metadata_group_column
@@ -24,10 +24,25 @@ calculate_polyclonal_prevalence <- function(
     merge(n_polyclonal, n_total, by = metadata_group_column, sort = FALSE)
   names(polyclonal_prevalence)[2:3] <- c("n_polyclonal", "n_total")
 
-  polyclonal_prevalence[["pc_polyclonal"]] <-
-    polyclonal_prevalence[["n_polyclonal"]] /
-    polyclonal_prevalence[["n_total"]] *
-    100
+  htests <-
+    tapply(
+      polyclonal_prevalence,
+      polyclonal_prevalence[[metadata_group_column]],
+      function(x) binom.test(x[["n_polyclonal"]], x[["n_total"]])
+    )
+  
+  polyclonal_prevalence <-
+    data.frame(
+      metadata_group_column = names(htests),
+      n_polyclonal = vapply(htests, function(x) x[["statistic"]], numeric(1)),
+      n_total = vapply(htests, function(x) x[["parameter"]], numeric(1)),
+      pc_polyclonal = 100 * vapply(htests, function(x) x[["estimate"]], numeric(1)),
+      CI_lower_95 = 100 * vapply(htests, function(x) x[["conf.int"]], numeric(2))[1, ],
+      CI_upper_95 = 100 * vapply(htests, function(x) x[["conf.int"]], numeric(2))[2, ]
+    )
+  names(polyclonal_prevalence)[
+    names(polyclonal_prevalence) %in% "metadata_group_column"
+  ] <- metadata_group_column
 
   return(polyclonal_prevalence)
 }
@@ -136,15 +151,16 @@ ggplot(
   aes(
     x = as.factor(.data[[metadata_group_column]]),
     y = pc_polyclonal,
-    label = paste0("(", n_polyclonal, "/", n_total, ")")
+    ymin = CI_lower_95,
+    ymax = CI_upper_95
   )
 ) +
   geom_col() +
+  geom_errorbar() +
   ylim(0, 100) +
   xlab(metadata_group_column) +
   ylab("% polyclonal") +
-  theme_classic() +
-  geom_text(nudge_y = 3)
+  theme_classic()
 
 dev.off()
 

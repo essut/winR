@@ -1,29 +1,6 @@
 #!/usr/bin/env Rscript
 
-## Load all functions by running everything from line 4-84
-run_initial_mcmc <-
-  function(data, nchain = 4, burnin = 1000, samples_per_chain = 1000) {
-    cl <- parallel::makeCluster(spec = nchain)
-
-    initial_mcmcs <-
-      parallel::clusterCall(
-        cl = cl,
-        fun = moire::run_mcmc,
-        data = data,
-        is_missing = data[["is_missing"]],
-        burnin = burnin,
-        samples_per_chain = samples_per_chain
-      )
-
-    parallel::stopCluster(cl = cl)
-
-    initial_mcmc <- list()
-    initial_mcmc[["chains"]] <-
-      lapply(initial_mcmcs, function(x) x[["chains"]][[1]])
-
-    initial_mcmc
-  }
-
+## Load all functions by running everything from line 4-61
 plot.posterior.burnin.trace <- function(mcmc_results) {
   for (i in seq_along(mcmc_results[["chains"]])) {
     chain <- mcmc_results[["chains"]][[i]]

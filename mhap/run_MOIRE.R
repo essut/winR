@@ -105,7 +105,7 @@ data <- moire::load_long_form_data(df)
 # parallel tempering chains = 40 chains between 0.5 to 1 [pt_chains]
 # adjust the number of threads [pt_num_threads] accordingly
 burnin <- 1000
-pt_num_threads <- 10
+pt_num_threads <- 40
 pt_chains <- seq(0.5, 1, length.out = 40)
 samples_per_chain <- 1000
 

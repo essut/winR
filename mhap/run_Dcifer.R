@@ -186,9 +186,9 @@ dsmp <- formatDat(dlong, svar = "sample_id", lvar = "locus", avar = "allele")
 coi <- getCOI(dsmp)
 afreq <- calcAfreq(dsmp, coi)
 
-# FIXME: adjust the number of threads to use if necessary
-# if not set, will try to use as many threads as possible
-spec <- parallel::detectCores() - 2L
+# FIXME: adjust the number of threads to use
+# if not set, use only one thread
+spec <- 1
 
 mall.estimate <- analyse.all.pairs.relatedness(dsmp, coi, afreq, spec)
 

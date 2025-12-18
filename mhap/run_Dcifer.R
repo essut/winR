@@ -115,25 +115,40 @@ calculate.overall.relatedness.estimate <- function(m1.estimate, sig, coi) {
 
 
 .analyse.all.pairs.relatedness.serial <-
-  function(indices, dsmp, coi, afreq, alpha = 0.05, nr = 1000) {
-    lapply(indices, function(x) {
-    # do not limit number of related pairs (Mmax)
+  function(indices, dsmp, coi, afreq, alpha = 0.05, nr = 1000, quiet = FALSE) {
+    lapply(seq_along(indices), function(x) {
+      if (!quiet) {
+        print(paste0(x, " / ", length(indices)))
+      }
+
+      x <- indices[[x]]
+
+      # do not limit number of related pairs (Mmax)
       ibdEstM(
         dsmp[x],
         coi[x],
-      afreq,
+        afreq,
         Mmax = min(coi[x]),
-      confreg = TRUE,
-      alpha = alpha,
-      equalr = TRUE,
-      nrs = nr
-    )
+        confreg = TRUE,
+        alpha = alpha,
+        equalr = TRUE,
+        nrs = nr
+      )
     })
   }
 
 .analyse.all.pairs.relatedness.parallel <-
-  function(indices, dsmp, coi, afreq, alpha = 0.05, nr = 1000, spec = 2) {
-    cl <- parallel::makeCluster(spec)
+  function(
+    indices,
+    dsmp,
+    coi,
+    afreq,
+    alpha = 0.05,
+    nr = 1000,
+    spec = 2,
+    quiet = FALSE
+  ) {
+    cl <- parallel::makeCluster(spec, output = "")
     on.exit(parallel::stopCluster(cl = cl))
 
     # https://stackoverflow.com/questions/18035711/environment-and-scope-when-using-parallel-functions
@@ -142,15 +157,22 @@ calculate.overall.relatedness.estimate <- function(m1.estimate, sig, coi) {
 
     parallel::parLapplyLB(
       cl = cl,
-      indices,
+      seq_along(indices),
       function(x) {
+        if (!quiet) {
+          print(paste0(x, " / ", length(indices)))
+        }
+
+        x <- indices[[x]]
+
+        # do not limit number of related pairs (Mmax)
         dcifer::ibdEstM(
           dsmp[x],
           coi[x],
           afreq,
           Mmax = min(coi[x]),
           confreg = TRUE,
-      alpha = alpha,
+          alpha = alpha,
           equalr = TRUE,
           nrs = nr
         )
@@ -162,7 +184,7 @@ calculate.overall.relatedness.estimate <- function(m1.estimate, sig, coi) {
 # where precision = 1 / nr, be warned that increasing this value
 # will also increase the time and memory required to finish
 analyse.all.pairs.relatedness <-
-  function(dsmp, coi, afreq, alpha = 0.05, nr = 1000, spec = 1) {
+  function(dsmp, coi, afreq, alpha = 0.05, nr = 1000, spec = 1, quiet = FALSE) {
     indices <- combn(1:length(dsmp), 2, simplify = FALSE)
 
     if (spec == 1) {
@@ -172,8 +194,9 @@ analyse.all.pairs.relatedness <-
         coi,
         afreq,
         alpha,
-        nr
-        )
+        nr,
+        quiet
+      )
     } else {
       res <-
         .analyse.all.pairs.relatedness.parallel(
@@ -183,7 +206,8 @@ analyse.all.pairs.relatedness <-
           afreq,
           alpha,
           nr,
-          spec
+          spec,
+          quiet
         )
     }
 

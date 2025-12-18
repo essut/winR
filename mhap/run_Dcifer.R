@@ -114,40 +114,78 @@ calculate.overall.relatedness.estimate <- function(m1.estimate, sig, coi) {
 }
 
 
+.analyse.all.pairs.relatedness.serial <-
+  function(indices, dsmp, coi, afreq, alpha = 0.05, nr = 1000) {
+    lapply(indices, function(x) {
+    # do not limit number of related pairs (Mmax)
+      ibdEstM(
+        dsmp[x],
+        coi[x],
+      afreq,
+        Mmax = min(coi[x]),
+      confreg = TRUE,
+      alpha = alpha,
+      equalr = TRUE,
+      nrs = nr
+    )
+    })
+  }
+
+.analyse.all.pairs.relatedness.parallel <-
+  function(indices, dsmp, coi, afreq, alpha = 0.05, nr = 1000, spec = 2) {
+    cl <- parallel::makeCluster(spec)
+    on.exit(parallel::stopCluster(cl = cl))
+
+    # https://stackoverflow.com/questions/18035711/environment-and-scope-when-using-parallel-functions
+    force(coi)
+    force(afreq)
+
+    parallel::parLapplyLB(
+      cl = cl,
+      indices,
+      function(x) {
+        dcifer::ibdEstM(
+          dsmp[x],
+          coi[x],
+          afreq,
+          Mmax = min(coi[x]),
+          confreg = TRUE,
+      alpha = alpha,
+          equalr = TRUE,
+          nrs = nr
+        )
+      }
+    )
+  }
+
 # nr is used to control the precision of the relatedness estimate
 # where precision = 1 / nr, be warned that increasing this value
 # will also increase the time and memory required to finish
 analyse.all.pairs.relatedness <-
-  function(dsmp, coi, afreq, spec, alpha = 0.05, nr = 1000) {
-    # setup to run Dcifer in parallel
-    cl <- parallel::makeCluster(spec)
-    on.exit(parallel::stopCluster(cl = cl))
-    parallel::clusterExport(
-      cl = cl,
-      c("dsmp", "coi", "afreq", "alpha", "nr"),
-      envir = environment()
-    )
-
+  function(dsmp, coi, afreq, alpha = 0.05, nr = 1000, spec = 1) {
     indices <- combn(1:length(dsmp), 2, simplify = FALSE)
 
-    # do not limit number of related pairs (Mmax)
-    res <-
-      parallel::parLapply(
-        cl = cl,
+    if (spec == 1) {
+      res <- .analyse.all.pairs.relatedness.serial(
         indices,
-        function(x) {
-          dcifer::ibdEstM(
-            dsmp[x],
-            coi[x],
-            afreq,
-            Mmax = max(coi),
-            confreg = TRUE,
-            alpha = alpha,
-            equalr = TRUE,
-            nrs = nr
-          )
-        }
-      )
+        dsmp,
+        coi,
+        afreq,
+        alpha,
+        nr
+        )
+    } else {
+      res <-
+        .analyse.all.pairs.relatedness.parallel(
+          indices,
+          dsmp,
+          coi,
+          afreq,
+          alpha,
+          nr,
+          spec
+        )
+    }
 
     pairs <- vapply(indices, function(x) names(dsmp)[x], character(2))
     coi1 <- vapply(indices, function(x) coi[x[1]], numeric(1))
@@ -190,7 +228,7 @@ afreq <- calcAfreq(dsmp, coi)
 # if not set, use only one thread
 spec <- 1
 
-mall.estimate <- analyse.all.pairs.relatedness(dsmp, coi, afreq, spec)
+mall.estimate <- analyse.all.pairs.relatedness(dsmp, coi, afreq, spec = spec)
 
 mall.estimate.file <-
   paste0(output.dir, "/", "mhap_between_relatedness_estimate.tsv")

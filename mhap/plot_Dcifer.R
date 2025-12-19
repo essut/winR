@@ -44,6 +44,22 @@ mall.estimate.meta <-
   )
 
 
+## setup colours here
+z <- as.factor(metadata[[metadata.group.column]])
+
+# FIXME: select the colour palette according to the number of groups
+# The "Tableau 10" colour palette can accommodate up to 10 groups (default)
+# There are also "ggplot2" and other palettes from `palette.pals()`
+# The "Polychrome 36" colour palette can accommodate up to 36 groups
+# You can also specify your own colour palette to use
+nlevels(z)
+
+cols <- palette.colors(palette = "Tableau 10")
+
+palette <- setNames(cols[1:nlevels(z)], levels(z))
+
+
+## setup for relatedness between-infections within groups
 mall.estimate.meta.within <-
   mall.estimate.meta[
     mall.estimate.meta[[paste0(metadata.group.column, ".x")]] ==
@@ -63,28 +79,21 @@ ggplot(
   mall.estimate.meta.within,
   aes(x = as.factor(.data[[metadata.group.column]]), y = scaled_r)
 ) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_jitter(width = 0.35, height = 0, alpha = 0.5) +
+  geom_jitter(
+    aes(colour = as.factor(.data[[metadata.group.column]])),
+    width = 0.35,
+    height = 0,
+    alpha = 0.5,
+    show.legend = FALSE
+  ) +
+  geom_boxplot(fill = NA, outlier.shape = NA) +
   ylim(0, 1) +
   xlab(metadata.group.column) +
-  ylab("between relatedness") +
-  theme_classic()
+  ylab("relatedness between-infections (IBD)") +
+  theme_classic() +
+  scale_colour_manual(breaks = levels(z), values = palette)
 
 dev.off()
-
-
-z <- as.factor(metadata[[metadata.group.column]])
-
-# FIXME: select the colour palette according to the number of groups
-# The "Okabe-Ito" colour palette can accommodate up to 9 groups (default)
-# The "Polychrome 36" colour palette can accommodate up to 36 groups
-# You can also specify your own colour palette to use
-nlevels(z)
-
-# exclude black from Okabe-Ito palette
-cols <- palette.colors(palette = "Okabe-Ito")[-1]
-
-palette <- setNames(cols[1:nlevels(z)], levels(z))
 
 
 prefix.filename <- paste0(output.dir, "/", "mhap_network")

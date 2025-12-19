@@ -30,15 +30,18 @@ calculate_polyclonal_prevalence <- function(
       polyclonal_prevalence[[metadata_group_column]],
       function(x) binom.test(x[["n_polyclonal"]], x[["n_total"]])
     )
-  
+
   polyclonal_prevalence <-
     data.frame(
       metadata_group_column = names(htests),
       n_polyclonal = vapply(htests, function(x) x[["statistic"]], numeric(1)),
       n_total = vapply(htests, function(x) x[["parameter"]], numeric(1)),
-      pc_polyclonal = 100 * vapply(htests, function(x) x[["estimate"]], numeric(1)),
-      CI_lower_95 = 100 * vapply(htests, function(x) x[["conf.int"]], numeric(2))[1, ],
-      CI_upper_95 = 100 * vapply(htests, function(x) x[["conf.int"]], numeric(2))[2, ]
+      pc_polyclonal = 100 *
+        vapply(htests, function(x) x[["estimate"]], numeric(1)),
+      CI_lower_95 = 100 *
+        vapply(htests, function(x) x[["conf.int"]], numeric(2))[1, ],
+      CI_upper_95 = 100 *
+        vapply(htests, function(x) x[["conf.int"]], numeric(2))[2, ]
     )
   names(polyclonal_prevalence)[
     names(polyclonal_prevalence) %in% "metadata_group_column"
@@ -118,7 +121,7 @@ ggplot(
   aes(x = as.factor(.data[[metadata_group_column]]), y = post_coi_mean)
 ) +
   geom_boxplot(outlier.shape = NA) +
-  geom_jitter(width = 0.35, height = 0, alpha = 0.5) +
+  geom_jitter(width = 0.3, height = 0, alpha = 0.5) +
   xlab(metadata_group_column) +
   ylab("COI") +
   theme_classic() +
@@ -178,7 +181,7 @@ ggplot(
   )
 ) +
   geom_boxplot(outlier.shape = NA) +
-  geom_jitter(width = 0.35, height = 0, alpha = 0.5) +
+  geom_jitter(width = 0.3, height = 0, alpha = 0.5) +
   xlab(metadata_group_column) +
   ylab("eMOI") +
   theme_classic() +

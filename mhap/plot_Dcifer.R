@@ -81,7 +81,7 @@ ggplot(
 ) +
   geom_jitter(
     aes(colour = as.factor(.data[[metadata.group.column]])),
-    width = 0.35,
+    width = 0.3,
     height = 0,
     alpha = 0.5,
     show.legend = FALSE

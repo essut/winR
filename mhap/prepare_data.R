@@ -523,17 +523,22 @@ dir.create(output.dir, recursive = TRUE)
 # FIXME: change to outputCIGAR.tsv / outputHaplotypes.tsv file paths
 output.files <-
   c(
-    "location/to/outputCIGAR.tsv",
-    "another/outputCIGAR.tsv"
+    "location/to/outputHaplotypes.tsv",
+    "another/outputHaplotypes.tsv"
   )
 
 
 outputs <- load.outputs(output.files)
 
+# FIXME: example on how to change sample IDs based on below notes
+samples <- outputs[["location/to/outputHaplotypes.tsv"]][["sample"]]
+samples[samples %in% "ScPv_1192"] <- "SCPv_1192"
+samples[samples %in% "ScPv_1193"] <- "SCPv_1193"
+outputs[["location/to/outputHaplotypes.tsv"]][["sample"]] <- samples
+
 # use outputs for complete sample list
 sample.list <- get.sample.list(outputs)
 
-print(sample.list)
 ## STOP and check the sample list, take notes on what needs to be changed
 
 # FIXME: choose an action for samples with the same name in different runs
@@ -543,13 +548,6 @@ print(sample.list)
 merged <- merge.outputs(outputs, sample.list, how = "sum")
 long <- merged[["long"]]
 sample.list <- merged[["sample.list"]]
-
-
-# FIXME: example on how to change sample IDs based on above notes
-# long[long[["sample_id"]] %in% "Human-AT2", "sample_id"] <- "NC"
-# long[long[["sample_id"]] %in% "NTC-1xTE", "sample_id"] <- "EMPTY"
-# long[long[["sample_id"]] %in% "Pf-K1", "sample_id"] <- "NC"
-# long <- aggregate(count ~ sample_id + locus + allele, long, sum)
 
 # FIXME: remove samples if needed (e.g. samples from a different cohort)
 removed.samples <- c("sWGA_1_10", "sWGA_1_20", "sWGA_1_30")

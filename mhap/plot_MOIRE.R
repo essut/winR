@@ -111,6 +111,21 @@ effective_coi_summary <-
 
 ## STOP and check the number of samples remaining after the previous steps
 
+## setup colours here
+z <- as.factor(metadata[[metadata_group_column]])
+
+# FIXME: select the colour palette according to the number of groups
+# The "Tableau 10" colour palette can accommodate up to 10 groups (default)
+# There are also "ggplot2" and other palettes from `palette.pals()`
+# The "Polychrome 36" colour palette can accommodate up to 36 groups
+# You can also specify your own colour palette to use
+nlevels(z)
+
+cols <- palette.colors(palette = "Tableau 10")
+
+palette <- setNames(cols[1:nlevels(z)], levels(z))
+
+
 coi_plot_file <- paste0(output_dir, "/", "mhap_COI.pdf")
 
 # FIXME: adjust plotting template if necessary
@@ -120,12 +135,19 @@ ggplot(
   coi_summary,
   aes(x = as.factor(.data[[metadata_group_column]]), y = post_coi_mean)
 ) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_jitter(width = 0.3, height = 0, alpha = 0.5) +
+  geom_jitter(
+    aes(colour = as.factor(.data[[metadata_group_column]])),
+    width = 0.3,
+    height = 0,
+    alpha = 0.5,
+    show.legend = FALSE
+  ) +
+  geom_boxplot(fill = NA, outlier.shape = NA) +
   xlab(metadata_group_column) +
   ylab("COI") +
   theme_classic() +
-  scale_y_continuous(breaks = 1:ceiling(max(coi_summary[["post_coi_mean"]])))
+  scale_y_continuous(breaks = 1:ceiling(max(coi_summary[["post_coi_mean"]]))) +
+  scale_colour_manual(breaks = levels(z), values = palette)
 
 dev.off()
 
@@ -158,12 +180,16 @@ ggplot(
     ymax = CI_upper_95
   )
 ) +
-  geom_col() +
-  geom_errorbar() +
+  geom_col(
+    aes(fill = as.factor(.data[[metadata_group_column]])),
+    show.legend = FALSE
+  ) +
+  geom_errorbar(width = 0.5) +
   ylim(0, 100) +
   xlab(metadata_group_column) +
   ylab("% polyclonal") +
-  theme_classic()
+  theme_classic() +
+  scale_fill_manual(breaks = levels(z), values = palette)
 
 dev.off()
 
@@ -180,13 +206,20 @@ ggplot(
     y = post_effective_coi_mean
   )
 ) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_jitter(width = 0.3, height = 0, alpha = 0.5) +
+  geom_jitter(
+    aes(colour = as.factor(.data[[metadata_group_column]])),
+    width = 0.3,
+    height = 0,
+    alpha = 0.5,
+    show.legend = FALSE
+  ) +
+  geom_boxplot(fill = NA, outlier.shape = NA) +
   xlab(metadata_group_column) +
   ylab("eMOI") +
   theme_classic() +
   scale_y_continuous(
     breaks = 1:ceiling(max(effective_coi_summary[["post_effective_coi_mean"]]))
-  )
+  ) +
+  scale_colour_manual(breaks = levels(z), values = palette)
 
 dev.off()

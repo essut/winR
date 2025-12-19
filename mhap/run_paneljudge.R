@@ -347,7 +347,7 @@ n <- 100
 
 # FIXME: switch rates (k) and relatedness values (r) parameter to simulate
 ks <- c(5)
-rs <- c(0.01, seq(0.25, 0.75, 0.25), 0.99)
+rs <- c(0.01, seq(0.05, 0.20, 0.05), seq(0.25, 0.75, 0.25), 0.99)
 
 krhats <- vector("list", n * length(ks) * length(rs))
 j <- 1

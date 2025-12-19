@@ -31,7 +31,7 @@ ggplot(
   geom_jitter(width = 0.3, height = 0, alpha = 0.5) +
   ylim(0, 1) +
   xlab(metadata.group.column) +
-  ylab("Diversity") +
+  ylab("Marker diversity") +
   theme_classic()
 
 dev.off()
@@ -55,7 +55,7 @@ ggplot(
   geom_boxplot(outlier.shape = NA) +
   geom_jitter(width = 0.3, height = 0, alpha = 0.5) +
   xlab(metadata.group.column) +
-  ylab("Effective Cardinality") +
+  ylab("Marker effective cardinality") +
   theme_classic()
 
 dev.off()

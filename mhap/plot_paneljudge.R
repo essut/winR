@@ -9,6 +9,15 @@ dir.create(output.dir, recursive = TRUE)
 metadata.group.column <- "Year"
 
 
+## setup colours here
+# FIXME: select the colour palette according to the number of groups
+# The "Tableau 10" colour palette can accommodate up to 10 groups (default)
+# There are also "ggplot2" and other palettes from `palette.pals()`
+# The "Polychrome 36" colour palette can accommodate up to 36 groups
+# You can also specify your own colour palette to use
+cols <- palette.colors(palette = "Tableau 10")
+
+
 # FIXME: change to path of diversities
 diversities.file <- "location/to/paneljudge/mhap_paneljudge_diversities.tsv"
 
@@ -20,6 +29,14 @@ diversities.plot.file <- paste0(
   "mhap_paneljudge_diversities.pdf"
 )
 
+diversities[[metadata.group.column]] <-
+  factor(diversities[[metadata.group.column]])
+diversities.palette <-
+  setNames(
+    cols[1:nlevels(diversities[[metadata.group.column]])],
+    levels(diversities[[metadata.group.column]])
+  )
+
 # FIXME: adjust size (in inches) of paneljudge diversities plot
 pdf(file = diversities.plot.file, width = 4, height = 4)
 
@@ -27,12 +44,22 @@ ggplot(
   diversities,
   aes(x = as.factor(.data[[metadata.group.column]]), y = diversity)
 ) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_jitter(width = 0.3, height = 0, alpha = 0.5) +
+  geom_jitter(
+    aes(colour = as.factor(.data[[metadata.group.column]])),
+    width = 0.3,
+    height = 0,
+    alpha = 0.5,
+    show.legend = FALSE
+  ) +
+  geom_boxplot(fill = NA, outlier.shape = NA) +
   ylim(0, 1) +
   xlab(metadata.group.column) +
   ylab("Marker diversity") +
-  theme_classic()
+  theme_classic() +
+  scale_colour_manual(
+    breaks = names(diversities.palette),
+    values = diversities.palette
+  )
 
 dev.off()
 
@@ -45,6 +72,14 @@ eff.cardinalities <- read.delim(eff.cardinalities.file)
 eff.cardinalities.plot.file <-
   paste0(output.dir, "/", "mhap_paneljudge_eff_cardinalities.pdf")
 
+eff.cardinalities[[metadata.group.column]] <-
+  factor(eff.cardinalities[[metadata.group.column]])
+eff.cardinalities.palette <-
+  setNames(
+    cols[1:nlevels(eff.cardinalities[[metadata.group.column]])],
+    levels(eff.cardinalities[[metadata.group.column]])
+  )
+
 # FIXME: adjust size (in inches) of paneljudge effective cardinalities plot
 pdf(file = eff.cardinalities.plot.file, width = 4, height = 4)
 
@@ -52,11 +87,21 @@ ggplot(
   eff.cardinalities,
   aes(x = as.factor(.data[[metadata.group.column]]), y = eff_cardinality)
 ) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_jitter(width = 0.3, height = 0, alpha = 0.5) +
+  geom_jitter(
+    aes(colour = as.factor(.data[[metadata.group.column]])),
+    width = 0.3,
+    height = 0,
+    alpha = 0.5,
+    show.legend = FALSE
+  ) +
+  geom_boxplot(fill = NA, outlier.shape = NA) +
   xlab(metadata.group.column) +
   ylab("Marker effective cardinality") +
-  theme_classic()
+  theme_classic() +
+  scale_colour_manual(
+    breaks = names(eff.cardinalities.palette),
+    values = eff.cardinalities.palette
+  )
 
 dev.off()
 
@@ -76,13 +121,24 @@ names(rmse.krhats)[length(rmse.krhats)] <- "RMSE"
 
 krhats.plot.file <- paste0(output.dir, "/", "mhap_paneljudge_k_r_estimates.pdf")
 
+rmse.krhats[[metadata.group.column]] <-
+  factor(rmse.krhats[[metadata.group.column]])
+rmse.krhats.palette <-
+  setNames(
+    cols[1:nlevels(rmse.krhats[[metadata.group.column]])],
+    levels(rmse.krhats[[metadata.group.column]])
+  )
+
 # FIXME: adjust size (in inches) of paneljudge k and r estimates plot
 pdf(file = krhats.plot.file, width = 6, height = 4)
 
 ggplot(rmse.krhats, aes(x = r, y = RMSE)) +
   facet_wrap(metadata.group.column, scales = "free_y") +
+  geom_line(
+    aes(colour = as.factor(.data[[metadata.group.column]])),
+    show.legend = FALSE
+  ) +
   geom_point() +
-  geom_line() +
   xlab(expression(paste("data-generating ", italic(r)))) +
   ylab(expression(paste(
     "RMSE of ",
@@ -90,6 +146,10 @@ ggplot(rmse.krhats, aes(x = r, y = RMSE)) +
     " around data-generating ",
     italic(r)
   ))) +
-  theme_classic()
+  theme_classic() +
+  scale_colour_manual(
+    breaks = names(rmse.krhats.palette),
+    values = rmse.krhats.palette
+  )
 
 dev.off()

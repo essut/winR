@@ -399,7 +399,7 @@ calculate.allele.statistics <- function(long) {
   long.allele.statistics <-
     merge(long.allele.statistics, long.allele.count, sort = FALSE)
 
-  long.allele.statistics["prop.allele"] <-
+  long.allele.statistics[["prop.allele"]] <-
     long.allele.statistics[["nsample"]] /
     long.allele.statistics[["total.allele"]]
 

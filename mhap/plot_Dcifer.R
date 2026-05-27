@@ -160,7 +160,8 @@ for (i in seq_along(IBD.thresholds)) {
         title = paste0(IBD.threshold * 100, "%"),
         fill = metadata.group.column
       ) +
-      guides(linewidth = "none") +
+      # ensure legend order is consistent for all plots
+      guides(fill = guide_legend(order = 1), linewidth = "none") +
       scale_fill_manual(breaks = levels(z), values = palette) +
       # using low and high colours of Greys palette from ColorBrewer
       scale_colour_binned(

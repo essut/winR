@@ -104,6 +104,15 @@ IBD.thresholds <- c(1, 1 / 2, 1 / 4, 1 / 8, 1 / 16) * 0.95
 # make sure the IBD thresholds are in decreasing order
 IBD.thresholds <- sort(IBD.thresholds, decreasing = TRUE)
 
+colour.palette <- setNames(
+  colorRampPalette(c("#252525", "#F0F0F0"))(length(IBD.thresholds)),
+  IBD.thresholds
+)
+linewidth.palette <- setNames(
+  seq(from = 4, to = 1, length.out = length(IBD.thresholds)),
+  IBD.thresholds
+)
+
 g <-
   network(
     mall.estimate.meta[, c("sample_id1", "sample_id2", "scaled_r")],
@@ -129,10 +138,16 @@ for (i in seq_along(IBD.thresholds)) {
       sort = FALSE
     )
 
+  # manually bin IBD values for finer control of plots
+  net[["scaled_r"]] <- cut(
+    net[["scaled_r"]],
+    breaks = c(Inf, IBD.thresholds),
+    labels = rev(IBD.thresholds),
+    right = FALSE
+  )
+
   # sort by relatedness to emphasize close relationships
   net <- net[order(net[["scaled_r"]]), ]
-
-  threshold.index <- i - 1
 
   # FIXME: adjust size (in inches) of network plot
   pdf(
@@ -156,28 +171,21 @@ for (i in seq_along(IBD.thresholds)) {
       geom_edges(aes(colour = scaled_r, linewidth = scaled_r)) +
       geom_nodes(size = 5, shape = 21) +
       theme_blank() +
-      labs(
-        title = paste0(IBD.threshold * 100, "%"),
-        fill = metadata.group.column
-      ) +
+      labs(fill = metadata.group.column) +
       # ensure legend order is consistent for all plots
-      guides(fill = guide_legend(order = 1), linewidth = "none") +
+      guides(fill = guide_legend(order = 1)) +
       scale_fill_manual(breaks = levels(z), values = palette) +
-      # using low and high colours of Greys palette from ColorBrewer
-      scale_colour_binned(
+      scale_colour_manual(
         name = "IBD",
-        breaks = rev(IBD.thresholds[1:threshold.index]),
-        labels = rev(paste0(IBD.thresholds[1:threshold.index] * 100, "%")),
-        limits = c(0, 1),
-        low = "#F0F0F0",
-        high = "#252525"
+        values = colour.palette,
+        breaks = IBD.thresholds[1:i],
+        labels = paste0(">=", IBD.thresholds[1:i] * 100, "%")
       ) +
-      scale_linewidth_binned(
+      scale_linewidth_manual(
         name = "IBD",
-        breaks = rev(IBD.thresholds[1:threshold.index]),
-        labels = rev(paste0(IBD.thresholds[1:threshold.index] * 100, "%")),
-        limits = c(0, 1),
-        range = c(0.5, 4)
+        values = linewidth.palette,
+        breaks = IBD.thresholds[1:i],
+        labels = paste0(">=", IBD.thresholds[1:i] * 100, "%")
       )
   )
 

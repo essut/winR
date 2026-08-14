@@ -14,25 +14,23 @@ get.sample.list <- function(outputs) {
   sample.list <- data.frame()
 
   for (i in names(outputs)) {
-    sample.list <-
-      rbind(
-        sample.list,
-        data.frame(
-          sample_id = outputs[[i]][["sample"]],
-          total_read_pairs = rowSums(outputs[[i]][, 2:ncol(outputs[[i]])]),
-          file = i
-        )
+    sample.list <- rbind(
+      sample.list,
+      data.frame(
+        sample_id = outputs[[i]][["sample"]],
+        total_read_pairs = rowSums(outputs[[i]][, 2:ncol(outputs[[i]])]),
+        file = i
       )
+    )
   }
 
   sample.list[["first"]] <- !duplicated(sample.list[["sample_id"]])
 
   # make sure the row names are valid
-  row.names(sample.list) <-
-    make.unique(paste0(
-      sample.list[["sample_id"]],
-      sample.list[["total_read_pairs"]]
-    ))
+  row.names(sample.list) <- make.unique(paste0(
+    sample.list[["sample_id"]],
+    sample.list[["total_read_pairs"]]
+  ))
 
   sample.list[["maximum"]] <- FALSE
   sample.list[
@@ -52,17 +50,16 @@ get.sample.list <- function(outputs) {
 
 
 output.to.long <- function(output, keep.unused.alleles = FALSE) {
-  long <-
-    reshape(
-      output,
-      direction = "long",
-      varying = names(output)[-1],
-      v.names = "count",
-      timevar = "pseudoCIGAR",
-      times = names(output)[-1],
-      idvar = "sample_id",
-      ids = output[["sample"]]
-    )
+  long <- reshape(
+    output,
+    direction = "long",
+    varying = names(output)[-1],
+    v.names = "count",
+    timevar = "pseudoCIGAR",
+    times = names(output)[-1],
+    idvar = "sample_id",
+    ids = output[["sample"]]
+  )
   row.names(long) <- NULL
 
   if (!keep.unused.alleles) {
@@ -79,20 +76,19 @@ output.to.long <- function(output, keep.unused.alleles = FALSE) {
 
 
 merge.outputs <- function(outputs, sample.list, how) {
-  sample.list <-
-    switch(
-      how,
-      sum = {
-        sample.list
-      },
-      maximum = {
-        sample.list[sample.list[["maximum"]], ]
-      },
-      first = {
-        sample.list[sample.list[["first"]], ]
-      },
-      stop("Valid options are 'sum', 'maximum', 'first'")
-    )
+  sample.list <- switch(
+    how,
+    sum = {
+      sample.list
+    },
+    maximum = {
+      sample.list[sample.list[["maximum"]], ]
+    },
+    first = {
+      sample.list[sample.list[["first"]], ]
+    },
+    stop("Valid options are 'sum', 'maximum', 'first'")
+  )
   sample.list <- sample.list[, c("sample_id", "total_read_pairs", "file")]
 
   longs <- list()
@@ -180,18 +176,16 @@ merge.outputs <- function(outputs, sample.list, how) {
   # mark and replace the deletions with the correct reference length
   long[["allele"]] <- gsub("-[acgt]+", "|", long[["allele"]])
   long[["allele"]] <- strsplit(long[["allele"]], "\\|")
-  del.sub <-
-    mapply(
-      function(x, y) c(x, character(y)),
-      x = del.sub,
-      y = lengths(long[["allele"]]) - lengths(del.sub)
-    )
-  long[["allele"]] <-
-    mapply(
-      function(x, y) paste0(c(rbind(x, y)), collapse = ""),
-      x = long[["allele"]],
-      y = del.sub
-    )
+  del.sub <- mapply(
+    function(x, y) c(x, character(y)),
+    x = del.sub,
+    y = lengths(long[["allele"]]) - lengths(del.sub)
+  )
+  long[["allele"]] <- mapply(
+    function(x, y) paste0(c(rbind(x, y)), collapse = ""),
+    x = long[["allele"]],
+    y = del.sub
+  )
 
   # scan and sum up the split references
   cs.modified <- character(length(long[["allele"]]))
@@ -206,11 +200,10 @@ merge.outputs <- function(outputs, sample.list, how) {
       # if not numeric
       if (is.na(as.numeric(char))) {
         if (length(potential.numbers) != 0) {
-          numeric.store <-
-            c(
-              numeric.store,
-              as.numeric(paste0(potential.numbers, collapse = ""))
-            )
+          numeric.store <- c(
+            numeric.store,
+            as.numeric(paste0(potential.numbers, collapse = ""))
+          )
 
           numeric.store <- na.omit(numeric.store)
         }
@@ -236,12 +229,11 @@ merge.outputs <- function(outputs, sample.list, how) {
     }
 
     # end of loop, make sure everything is written
-    numeric.store <-
-      sum(
-        numeric.store,
-        as.numeric(paste0(potential.numbers, collapse = "")),
-        na.rm = TRUE
-      )
+    numeric.store <- sum(
+      numeric.store,
+      as.numeric(paste0(potential.numbers, collapse = "")),
+      na.rm = TRUE
+    )
 
     if (numeric.store != 0) {
       cs <- c(cs, as.character(numeric.store))
@@ -283,15 +275,20 @@ select.markers <- function(long, keep.marker = "microhaplotype") {
   switch(
     keep.marker,
     microhaplotype = {
-      long[!grepl("MIT|DHPS|MDR1", long[["locus"]]), ]
+      long[
+        !grepl("MIT|DHPS|MDR1|CRT|DHFR|HRP2|HRP3|K13|species", long[["locus"]]),
+      ]
     },
     drugR = {
-      long[grepl("DHPS|MDR1", long[["locus"]]), ]
+      long[grepl("DHPS|MDR1|CRT|DHFR|K13", long[["locus"]]), ]
     },
-    mitochondria = {
-      long[grepl("MIT", long[["locus"]]), ]
+    diagnostic = {
+      long[grepl("HRP2|HRP3", long[["locus"]]), ]
     },
-    stop("Valid options are 'microhaplotype', 'drugR', 'mitochondria'")
+    species = {
+      long[grepl("MIT|species", long[["locus"]]), ]
+    },
+    stop("Valid options are 'microhaplotype', 'drugR', 'diagnostic', 'species'")
   )
 }
 
@@ -301,8 +298,7 @@ select.markers <- function(long, keep.marker = "microhaplotype") {
   names(dlong.count)[length(dlong.count)] <- "major"
 
   long.wprop <- merge(long, dlong.count, sort = FALSE)
-  long.wprop[["prop"]] <-
-    long.wprop[["count"]] / long.wprop[["major"]]
+  long.wprop[["prop"]] <- long.wprop[["count"]] / long.wprop[["major"]]
 
   long.wprop
 }
@@ -313,40 +309,43 @@ select.markers <- function(long, keep.marker = "microhaplotype") {
   names(dlong.count)[length(dlong.count)] <- "total"
 
   long.wprop <- merge(long, dlong.count, sort = FALSE)
-  long.wprop[["prop"]] <-
-    long.wprop[["count"]] / long.wprop[["total"]]
+  long.wprop[["prop"]] <- long.wprop[["count"]] / long.wprop[["total"]]
 
   long.wprop
 }
 
 
-allele.proportion.filter <-
-  function(long, allele.proportion.cutoff, on = "total", how = "naive") {
-    if (on %in% "total") {
-      long.wprop <- .calculate.prop.total(long)
-    } else if (on %in% "major") {
-      long.wprop <- .calculate.prop.major(long)
-    } else {
-      stop("Valid options are 'total' or 'major' allele")
-    }
-
-    long.wprop.max <- aggregate(prop ~ locus + allele, long.wprop, max)
-    names(long.wprop.max)[3] <- "prop.max"
-    long.wprop <- merge(long.wprop, long.wprop.max)
-
-    if (how %in% "naive") {
-      how.col <- "prop"
-    } else if (how %in% "population-aware") {
-      how.col <- "prop.max"
-    } else {
-      stop("Valid options are 'naive' or 'population-aware'")
-    }
-
-    long.wprop[
-      long.wprop[[how.col]] >= allele.proportion.cutoff,
-      c("sample_id", "locus", "allele", "count")
-    ]
+allele.proportion.filter <- function(
+  long,
+  allele.proportion.cutoff,
+  on = "total",
+  how = "naive"
+) {
+  if (on %in% "total") {
+    long.wprop <- .calculate.prop.total(long)
+  } else if (on %in% "major") {
+    long.wprop <- .calculate.prop.major(long)
+  } else {
+    stop("Valid options are 'total' or 'major' allele")
   }
+
+  long.wprop.max <- aggregate(prop ~ locus + allele, long.wprop, max)
+  names(long.wprop.max)[3] <- "prop.max"
+  long.wprop <- merge(long.wprop, long.wprop.max)
+
+  if (how %in% "naive") {
+    how.col <- "prop"
+  } else if (how %in% "population-aware") {
+    how.col <- "prop.max"
+  } else {
+    stop("Valid options are 'naive' or 'population-aware'")
+  }
+
+  long.wprop[
+    long.wprop[[how.col]] >= allele.proportion.cutoff,
+    c("sample_id", "locus", "allele", "count")
+  ]
+}
 
 
 allele.count.filter <- function(long, allele.count.cutoff) {
@@ -357,10 +356,9 @@ allele.count.filter <- function(long, allele.count.cutoff) {
 minimum.total.filter <- function(long, minimum.total.cutoff) {
   long.counts.per.locus <- aggregate(count ~ sample_id + locus, long, sum)
 
-  pass.filter <-
-    long.counts.per.locus[
-      long.counts.per.locus[["count"]] >= minimum.total.cutoff,
-    ]
+  pass.filter <- long.counts.per.locus[
+    long.counts.per.locus[["count"]] >= minimum.total.cutoff,
+  ]
 
   merge(long, pass.filter[, c("sample_id", "locus")], sort = FALSE)
 }
@@ -376,111 +374,120 @@ calculate.allele.statistics <- function(long) {
   start <- as.numeric(vapply(start.end, "[[", character(1), 1))
   end <- as.numeric(vapply(start.end, "[[", character(1), 2))
 
-  long <-
-    data.frame(
-      chromosome = chrom,
-      start.pos = start,
-      end.pos = end,
-      marker = marker,
-      long
-    )
+  long <- data.frame(
+    chromosome = chrom,
+    start.pos = start,
+    end.pos = end,
+    marker = marker,
+    long
+  )
 
-  long.allele.statistics <-
-    aggregate(
-      sample_id ~ chromosome + start.pos + end.pos + marker + locus + allele,
-      long,
-      length
-    )
+  long.allele.statistics <- aggregate(
+    sample_id ~ chromosome + start.pos + end.pos + marker + locus + allele,
+    long,
+    length
+  )
   names(long.allele.statistics)[7] <- "nsample"
 
   long.allele.count <- as.data.frame(table(long[["locus"]]))
   names(long.allele.count) <- c("locus", "total.allele")
 
-  long.allele.statistics <-
-    merge(long.allele.statistics, long.allele.count, sort = FALSE)
+  long.allele.statistics <- merge(
+    long.allele.statistics,
+    long.allele.count,
+    sort = FALSE
+  )
 
-  long.allele.statistics[["prop.allele"]] <-
-    long.allele.statistics[["nsample"]] /
+  long.allele.statistics[["prop.allele"]] <- long.allele.statistics[[
+    "nsample"
+  ]] /
     long.allele.statistics[["total.allele"]]
 
   long.allele.statistics
 }
 
 
-plot.prop.allele <-
-  function(long.allele.statistics, prop.allele.cutoff = -Inf) {
-    hist(
-      long.allele.statistics[["prop.allele"]],
-      breaks = "FD",
-      right = FALSE,
-      main = "Proportion of alleles",
-      xlab = NULL
-    )
+plot.prop.allele <- function(
+  long.allele.statistics,
+  prop.allele.cutoff = -Inf
+) {
+  hist(
+    long.allele.statistics[["prop.allele"]],
+    breaks = "FD",
+    right = FALSE,
+    main = "Proportion of alleles",
+    xlab = NULL
+  )
 
-    abline(v = prop.allele.cutoff, col = "red", lty = "dashed")
-  }
-
-
-plot.nsample.per.allele <-
-  function(long.allele.statistics, nsample.per.allele.cutoff = -Inf) {
-    hist(
-      long.allele.statistics[["nsample"]],
-      breaks = "FD",
-      right = FALSE,
-      main = "Number of sample per allele",
-      xlab = NULL
-    )
-
-    abline(v = nsample.per.allele.cutoff + 1, col = "red", lty = "dashed")
-  }
+  abline(v = prop.allele.cutoff, col = "red", lty = "dashed")
+}
 
 
-prop.allele.filter <-
-  function(long, long.allele.statistics, prop.allele.cutoff) {
-    pass.prop.allele <-
-      long.allele.statistics[
-        long.allele.statistics[["prop.allele"]] >= prop.allele.cutoff,
-        c("locus", "allele")
-      ]
+plot.nsample.per.allele <- function(
+  long.allele.statistics,
+  nsample.per.allele.cutoff = -Inf
+) {
+  hist(
+    long.allele.statistics[["nsample"]],
+    breaks = "FD",
+    right = FALSE,
+    main = "Number of sample per allele",
+    xlab = NULL
+  )
 
-    long <- merge(long, pass.prop.allele, sort = FALSE)
-    long[, c("sample_id", "locus", "allele", "count")]
-  }
+  abline(v = nsample.per.allele.cutoff + 1, col = "red", lty = "dashed")
+}
 
 
-nsample.per.allele.filter <-
-  function(long, long.allele.statistics, nsample.per.allele.cutoff) {
-    pass.nsample.per.allele <-
-      long.allele.statistics[
-        long.allele.statistics[["nsample"]] >= nsample.per.allele.cutoff,
-        c("locus", "allele")
-      ]
+prop.allele.filter <- function(
+  long,
+  long.allele.statistics,
+  prop.allele.cutoff
+) {
+  pass.prop.allele <- long.allele.statistics[
+    long.allele.statistics[["prop.allele"]] >= prop.allele.cutoff,
+    c("locus", "allele")
+  ]
 
-    long <- merge(long, pass.nsample.per.allele, sort = FALSE)
-    long[, c("sample_id", "locus", "allele", "count")]
-  }
+  long <- merge(long, pass.prop.allele, sort = FALSE)
+  long[, c("sample_id", "locus", "allele", "count")]
+}
+
+
+nsample.per.allele.filter <- function(
+  long,
+  long.allele.statistics,
+  nsample.per.allele.cutoff
+) {
+  pass.nsample.per.allele <- long.allele.statistics[
+    long.allele.statistics[["nsample"]] >= nsample.per.allele.cutoff,
+    c("locus", "allele")
+  ]
+
+  long <- merge(long, pass.nsample.per.allele, sort = FALSE)
+  long[, c("sample_id", "locus", "allele", "count")]
+}
 
 
 minimum.total.filter <- function(long, minimum.total.cutoff) {
   long.counts.per.locus <- aggregate(count ~ sample_id + locus, long, sum)
 
-  pass.filter <-
-    long.counts.per.locus[
-      long.counts.per.locus[["count"]] >= minimum.total.cutoff,
-    ]
+  pass.filter <- long.counts.per.locus[
+    long.counts.per.locus[["count"]] >= minimum.total.cutoff,
+  ]
 
   merge(long, pass.filter[, c("sample_id", "locus")], sort = FALSE)
 }
 
 
 calculate.remaining.nloci <- function(long) {
-  long.nloci.per.sample <-
-    aggregate(locus ~ sample_id, long, function(x) length(unique(x)))
+  long.nloci.per.sample <- aggregate(locus ~ sample_id, long, function(x) {
+    length(unique(x))
+  })
 
   names(long.nloci.per.sample)[2] <- "nloci"
 
-  long.count.per.sample <-
-    aggregate(count ~ sample_id, long, sum)
+  long.count.per.sample <- aggregate(count ~ sample_id, long, sum)
 
   names(long.count.per.sample)[2] <- "filtered_read_pairs"
 
@@ -501,16 +508,14 @@ plot.remaining.nloci <- function(long.nloci.per.sample, minimum.nloci) {
 }
 
 
-filter.failed.samples <-
-  function(long, long.nloci.per.sample, minimum.nloci) {
-    pass.samples <-
-      long.nloci.per.sample[
-        long.nloci.per.sample[["nloci"]] >= minimum.nloci,
-        "sample_id"
-      ]
+filter.failed.samples <- function(long, long.nloci.per.sample, minimum.nloci) {
+  pass.samples <- long.nloci.per.sample[
+    long.nloci.per.sample[["nloci"]] >= minimum.nloci,
+    "sample_id"
+  ]
 
-    long[long[["sample_id"]] %in% pass.samples, ]
-  }
+  long[long[["sample_id"]] %in% pass.samples, ]
+}
 
 
 ## Run the commands below step-by-step
@@ -521,11 +526,10 @@ output.dir <- "location/to/data"
 dir.create(output.dir, recursive = TRUE)
 
 # FIXME: change to outputCIGAR.tsv / outputHaplotypes.tsv file paths
-output.files <-
-  c(
-    "location/to/outputHaplotypes.tsv",
-    "another/outputHaplotypes.tsv"
-  )
+output.files <- c(
+  "location/to/outputHaplotypes.tsv",
+  "another/outputHaplotypes.tsv"
+)
 
 
 outputs <- load.outputs(output.files)
@@ -552,12 +556,11 @@ sample.list <- merged[["sample.list"]]
 # FIXME: remove samples if needed (e.g. samples from a different cohort)
 removed.samples <- c("sWGA_1_10", "sWGA_1_20", "sWGA_1_30")
 
-sample.list <-
-  sample.list[
-    !sample.list[["sample_id"]] %in% removed.samples,
-    ,
-    drop = FALSE
-  ]
+sample.list <- sample.list[
+  !sample.list[["sample_id"]] %in% removed.samples,
+  ,
+  drop = FALSE
+]
 
 long <- long[!long[["sample_id"]] %in% removed.samples, ]
 
@@ -582,13 +585,12 @@ mhap.filtered <- rmindel.allele(mhap.filtered)
 # FIXME: in relation to total allele (on = "total") or major allele (on = "major")
 allele.proportion.cutoff <- 0.02 # at least 2% allele proportion per sample
 allele.proportion.on <- "total" # per locus instead of per major allele
-mhap.filtered <-
-  allele.proportion.filter(
-    mhap.filtered,
-    allele.proportion.cutoff,
-    on = allele.proportion.on,
-    how = "naive"
-  )
+mhap.filtered <- allele.proportion.filter(
+  mhap.filtered,
+  allele.proportion.cutoff,
+  on = allele.proportion.on,
+  how = "naive"
+)
 
 # FIXME: filter alleles with less than X read-pairs per sample
 allele.count.cutoff <- 5 # at least 5 read-pairs needed for each allele per sample
@@ -597,8 +599,11 @@ mhap.filtered <- allele.count.filter(mhap.filtered, allele.count.cutoff)
 
 mhap.filtered.allele.statistics <- calculate.allele.statistics(mhap.filtered)
 
-mhap.filtered.allele.statistics.text <-
-  paste0(output.dir, "/", "mhap_filtered_allele_statistics.tsv")
+mhap.filtered.allele.statistics.text <- paste0(
+  output.dir,
+  "/",
+  "mhap_filtered_allele_statistics.tsv"
+)
 
 write.table(
   mhap.filtered.allele.statistics,
@@ -608,15 +613,21 @@ write.table(
   row.names = FALSE
 )
 
-mhap.filtered.prop.allele.figure <-
-  paste0(output.dir, "/", "mhap_filtered_prop_allele.pdf")
+mhap.filtered.prop.allele.figure <- paste0(
+  output.dir,
+  "/",
+  "mhap_filtered_prop_allele.pdf"
+)
 
 pdf(file = mhap.filtered.prop.allele.figure)
 plot.prop.allele(mhap.filtered.allele.statistics)
 dev.off()
 
-mhap.filtered.nsample.per.allele.figure <-
-  paste0(output.dir, "/", "mhap_filtered_nsample_per_allele.pdf")
+mhap.filtered.nsample.per.allele.figure <- paste0(
+  output.dir,
+  "/",
+  "mhap_filtered_nsample_per_allele.pdf"
+)
 
 pdf(file = mhap.filtered.nsample.per.allele.figure)
 plot.nsample.per.allele(mhap.filtered.allele.statistics)
@@ -640,8 +651,11 @@ dev.off()
 
 mhap.filtered.nloci.per.sample <- calculate.remaining.nloci(mhap.filtered)
 
-mhap.filtered.nloci.per.sample <-
-  merge(mhap.filtered.nloci.per.sample, sample.list, all = TRUE)
+mhap.filtered.nloci.per.sample <- merge(
+  mhap.filtered.nloci.per.sample,
+  sample.list,
+  all = TRUE
+)
 mhap.filtered.nloci.per.sample[
   is.na(mhap.filtered.nloci.per.sample[["nloci"]]),
   "nloci"
@@ -651,8 +665,11 @@ mhap.filtered.nloci.per.sample[
   "filtered_read_pairs"
 ] <- 0
 
-mhap.filtered.nloci.per.sample.text <-
-  paste0(output.dir, "/", "mhap_filtered_nloci.tsv")
+mhap.filtered.nloci.per.sample.text <- paste0(
+  output.dir,
+  "/",
+  "mhap_filtered_nloci.tsv"
+)
 
 write.table(
   mhap.filtered.nloci.per.sample,
@@ -666,19 +683,21 @@ write.table(
 # FIXME: change remaining locus threshold for failed samples
 minimum.nloci <- 75 # ~80% markers
 
-mhap.filtered.nloci.per.sample.figure <-
-  paste0(output.dir, "/", "mhap_filtered_nloci.pdf")
+mhap.filtered.nloci.per.sample.figure <- paste0(
+  output.dir,
+  "/",
+  "mhap_filtered_nloci.pdf"
+)
 
 pdf(file = mhap.filtered.nloci.per.sample.figure)
 plot.remaining.nloci(mhap.filtered.nloci.per.sample, minimum.nloci)
 dev.off()
 
-mhap.filtered.subset <-
-  filter.failed.samples(
-    mhap.filtered,
-    mhap.filtered.nloci.per.sample,
-    minimum.nloci
-  )
+mhap.filtered.subset <- filter.failed.samples(
+  mhap.filtered,
+  mhap.filtered.nloci.per.sample,
+  minimum.nloci
+)
 
 ## STOP and look at the generated text and figure statistics
 ## Was the remaining locus threshold appropriate for this dataset?
@@ -688,10 +707,9 @@ print(data.frame(sample_id = sort(unique(mhap.filtered.subset[["sample_id"]]))))
 # FIXME: remove any unused samples (e.g. controls)
 unused.samples <- c("CQE98-Pv")
 
-mhap.filtered.subset <-
-  mhap.filtered.subset[
-    !mhap.filtered.subset[["sample_id"]] %in% unused.samples,
-  ]
+mhap.filtered.subset <- mhap.filtered.subset[
+  !mhap.filtered.subset[["sample_id"]] %in% unused.samples,
+]
 
 mhap.filtered.subset.file <- paste0(output.dir, "/", "mhap_filtered.tsv")
 

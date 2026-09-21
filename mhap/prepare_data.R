@@ -535,10 +535,10 @@ output.files <- c(
 outputs <- load.outputs(output.files)
 
 # FIXME: example on how to change sample IDs based on below notes
-samples <- outputs[["location/to/outputHaplotypes.tsv"]][["sample"]]
-samples[samples %in% "ScPv_1192"] <- "SCPv_1192"
-samples[samples %in% "ScPv_1193"] <- "SCPv_1193"
-outputs[["location/to/outputHaplotypes.tsv"]][["sample"]] <- samples
+# samples <- outputs[["location/to/outputHaplotypes.tsv"]][["sample"]]
+# samples[samples %in% "ScPv_1192"] <- "SCPv_1192"
+# samples[samples %in% "ScPv_1193"] <- "SCPv_1193"
+# outputs[["location/to/outputHaplotypes.tsv"]][["sample"]] <- samples
 
 # use outputs for complete sample list
 sample.list <- get.sample.list(outputs)

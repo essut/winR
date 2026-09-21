@@ -575,7 +575,8 @@ mhap.filtered <- select.markers(long, keep.marker = "microhaplotype")
 ## FIXME: also, feel free to reorder filters as needed
 
 # FIXME: remove insertions and deletions in alleles
-mhap.filtered <- rmindel.allele(mhap.filtered)
+# FIXME: if not using the outputHaplotypes_rm_ins.tsv version, consider enabling
+# mhap.filtered <- rmindel.allele(mhap.filtered)
 
 # FIXME: filter locus with less than X read-pairs per sample
 # minimum.total.cutoff <- 10 # at least 10 read-pairs in total per locus per sample
@@ -584,7 +585,7 @@ mhap.filtered <- rmindel.allele(mhap.filtered)
 # FIXME: filter alleles with less than X% proportion per sample
 # FIXME: in relation to total allele (on = "total") or major allele (on = "major")
 allele.proportion.cutoff <- 0.02 # at least 2% allele proportion per sample
-allele.proportion.on <- "total" # per locus instead of per major allele
+allele.proportion.on <- "major" # per major allele instead of per locus
 mhap.filtered <- allele.proportion.filter(
   mhap.filtered,
   allele.proportion.cutoff,

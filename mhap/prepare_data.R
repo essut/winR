@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-## Load all functions by running everything from line 4-513
+## Load all functions by running everything from line 4-518
 load.outputs <- function(output.files) {
   outputs <- list()
   for (output.file in output.files) {

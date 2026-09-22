@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-## Load all functions by running everything from line 4-133
+## Load all functions by running everything from line 4-131
 decompose.loci <- function(dlong) {
   chrom.pos <- strsplit(dlong[["locus"]], ":")
   chrom <- vapply(chrom.pos, "[[", character(1), 1)
@@ -23,13 +23,9 @@ decompose.loci <- function(dlong) {
 
 ## assumes chromosomes have been given order
 sort.dlong <- function(dlong) {
-  sorted.dlong <-
-    dlong[
-      do.call(
-        order,
-        dlong[, c("chromosome", "start.pos", "end.pos", "allele")]
-      ),
-    ]
+  sorted.dlong <- dlong[
+    do.call(order, dlong[, c("chromosome", "start.pos", "end.pos", "allele")]),
+  ]
 
   locus.order <- unique(sorted.dlong[["locus"]])
   sorted.dlong[["locus"]] <- factor(
@@ -52,8 +48,8 @@ calculate.prop <- function(sorted.dlong) {
   names(dlong.count)[length(dlong.count)] <- "total"
 
   sorted.dlong.wprop <- merge(sorted.dlong, dlong.count, sort = FALSE)
-  sorted.dlong.wprop[["prop"]] <-
-    sorted.dlong.wprop[["count"]] / sorted.dlong.wprop[["total"]]
+  sorted.dlong.wprop[["prop"]] <- sorted.dlong.wprop[["count"]] /
+    sorted.dlong.wprop[["total"]]
 
   sorted.dlong.wprop
 }
@@ -82,20 +78,22 @@ plot.rainbow <- function(
 
   sample.dlong <- merge(dataset.alleles, sample.dlong, all = TRUE)
 
-  allele.prop <-
-    tapply(sample.dlong[["prop"]], sample.dlong[["marker"]], unlist)
-  allele.prop <-
-    lapply(allele.prop, function(x) {
-      x[is.na(x)] <- 0
-      return(x)
-    })
+  allele.prop <- tapply(
+    sample.dlong[["prop"]],
+    sample.dlong[["marker"]],
+    unlist
+  )
+  allele.prop <- lapply(allele.prop, function(x) {
+    x[is.na(x)] <- 0
+    return(x)
+  })
 
   allele.length <- lengths(allele.prop)
-  allele.pad <-
-    lapply(max(allele.length) - allele.length, function(n) rep(NA, n))
+  allele.pad <- lapply(max(allele.length) - allele.length, function(n) {
+    rep(NA, n)
+  })
 
-  allele.complete <-
-    mapply(function(x, y) c(x, y), allele.prop, allele.pad)
+  allele.complete <- mapply(function(x, y) c(x, y), allele.prop, allele.pad)
 
   # plot each bar according to number of alleles per marker
   first.plot <- TRUE
@@ -147,7 +145,9 @@ dlong <- read.delim(sfile)
 dlong <- decompose.loci(dlong)
 
 # FIXME: adjust chromosome name scheme
+# example below uses the P. vivax P01 chromosome name scheme
 chrom.order <- paste0("PvP01_", sprintf("%02d", 1:14), "_v2")
+
 dlong[["chromosome"]] <- factor(dlong[["chromosome"]], levels = chrom.order)
 
 sorted.dlong <- sort.dlong(dlong)

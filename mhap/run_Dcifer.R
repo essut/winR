@@ -30,207 +30,131 @@ pad.afreq <- function(afreq, dsmp) {
   return(afreq)
 }
 
-
-# old function to get relatedness estimate from ibdDat
-get.m1.estimate <- function(dres0) {
-  dmat <- dres0[,, "estimate"]
-  m1.estimate <- as.data.frame(as.table(dmat))
-  m1.estimate <- m1.estimate[!is.na(m1.estimate[["Freq"]]), ]
-  names(m1.estimate) <- c("sample_id2", "sample_id1", "M1")
-
-  return(m1.estimate)
-}
-
-
-# old function to analyse relatedness of "significantly related" pairs
-analyse.significantly.related.samples <-
-  function(dsmp, coi, afreq, dres0, alpha = 0.05) {
-    isig <- which(dres0[,, "p_value"] <= alpha, arr.ind = TRUE)[, 2:1]
-
-    # if no significant relatedness found
-    if (nrow(isig) == 0) {
-      return(NULL)
+.analyse.all.pairs.relatedness.serial <- function(
+  indices,
+  dsmp,
+  coi,
+  afreq,
+  alpha = 0.05,
+  nr = 1000,
+  quiet = FALSE
+) {
+  lapply(seq_along(indices), function(x) {
+    if (!quiet) {
+      print(paste0(x, " / ", length(indices)))
     }
 
-    sig2 <- vector("list", nrow(isig))
-    for (i in 1:nrow(isig)) {
-      sig2[[i]] <- ibdEstM(
-        dsmp[isig[i, ]],
-        coi[isig[i, ]],
-        afreq,
-        equalr = TRUE
-      )
-    }
-    M2 <- sapply(sig2, length)
-    rtotal2 <- sapply(sig2, sum)
+    x <- indices[[x]]
 
-    samples <- names(dsmp)
-    sig <- data.frame(
-      sample_id1 = samples[isig[, 1]],
-      sample_id2 = samples[isig[, 2]],
-      M = M2,
-      rtotal = rtotal2
+    # do not limit number of related pairs (Mmax)
+    ibdEstM(
+      dsmp[x],
+      coi[x],
+      afreq,
+      Mmax = min(coi[x]),
+      confreg = TRUE,
+      alpha = alpha,
+      equalr = TRUE,
+      nrs = nr
     )
-
-    return(sig)
-  }
-
-
-# old function to retrieve relatedness of all pairs
-calculate.overall.relatedness.estimate <- function(m1.estimate, sig, coi) {
-  if (is.null(sig)) {
-    mall.estimate <- cbind(m1.estimate, M = NA, rtotal = NA)
-  } else {
-    mall.estimate <- merge(m1.estimate, sig, all = TRUE)
-  }
-
-  coi.df <-
-    data.frame(
-      sample_id = sapply(strsplit(names(coi), ".", fixed = TRUE), "[[", 1),
-      coi = coi,
-      row.names = NULL
-    )
-
-  mall.estimate <-
-    merge(mall.estimate, coi.df, by.x = "sample_id2", by.y = "sample_id")
-  mall.estimate <-
-    merge(
-      mall.estimate,
-      coi.df,
-      by.x = "sample_id1",
-      by.y = "sample_id",
-      suffixes = c("2", "1")
-    )
-
-  mall.estimate[["scaled_r"]] <-
-    mall.estimate[["rtotal"]] /
-    (pmin(mall.estimate[["coi1"]], mall.estimate[["coi2"]]))
-
-  mall.estimate[["relatedness"]] <- mall.estimate[["scaled_r"]]
-  mall.estimate[is.na(mall.estimate[["relatedness"]]), "relatedness"] <-
-    mall.estimate[is.na(mall.estimate[["relatedness"]]), "M1"]
-
-  return(mall.estimate)
+  })
 }
 
+.analyse.all.pairs.relatedness.parallel <- function(
+  indices,
+  dsmp,
+  coi,
+  afreq,
+  alpha = 0.05,
+  nr = 1000,
+  spec = 2,
+  quiet = FALSE
+) {
+  cl <- parallel::makeCluster(spec, output = "")
+  on.exit(parallel::stopCluster(cl = cl))
 
-.analyse.all.pairs.relatedness.serial <-
-  function(indices, dsmp, coi, afreq, alpha = 0.05, nr = 1000, quiet = FALSE) {
-    lapply(seq_along(indices), function(x) {
-      if (!quiet) {
-        print(paste0(x, " / ", length(indices)))
-      }
+  # https://stackoverflow.com/questions/18035711/environment-and-scope-when-using-parallel-functions
+  force(coi)
+  force(afreq)
 
-      x <- indices[[x]]
+  parallel::parLapplyLB(cl = cl, seq_along(indices), function(x) {
+    if (!quiet) {
+      print(paste0(x, " / ", length(indices)))
+    }
 
-      # do not limit number of related pairs (Mmax)
-      ibdEstM(
-        dsmp[x],
-        coi[x],
-        afreq,
-        Mmax = min(coi[x]),
-        confreg = TRUE,
-        alpha = alpha,
-        equalr = TRUE,
-        nrs = nr
-      )
-    })
-  }
+    x <- indices[[x]]
 
-.analyse.all.pairs.relatedness.parallel <-
-  function(
-    indices,
-    dsmp,
-    coi,
-    afreq,
-    alpha = 0.05,
-    nr = 1000,
-    spec = 2,
-    quiet = FALSE
-  ) {
-    cl <- parallel::makeCluster(spec, output = "")
-    on.exit(parallel::stopCluster(cl = cl))
-
-    # https://stackoverflow.com/questions/18035711/environment-and-scope-when-using-parallel-functions
-    force(coi)
-    force(afreq)
-
-    parallel::parLapplyLB(
-      cl = cl,
-      seq_along(indices),
-      function(x) {
-        if (!quiet) {
-          print(paste0(x, " / ", length(indices)))
-        }
-
-        x <- indices[[x]]
-
-        # do not limit number of related pairs (Mmax)
-        dcifer::ibdEstM(
-          dsmp[x],
-          coi[x],
-          afreq,
-          Mmax = min(coi[x]),
-          confreg = TRUE,
-          alpha = alpha,
-          equalr = TRUE,
-          nrs = nr
-        )
-      }
+    # do not limit number of related pairs (Mmax)
+    dcifer::ibdEstM(
+      dsmp[x],
+      coi[x],
+      afreq,
+      Mmax = min(coi[x]),
+      confreg = TRUE,
+      alpha = alpha,
+      equalr = TRUE,
+      nrs = nr
     )
-  }
+  })
+}
 
 # nr is used to control the precision of the relatedness estimate
 # where precision = 1 / nr, be warned that increasing this value
 # will also increase the time and memory required to finish
-analyse.all.pairs.relatedness <-
-  function(dsmp, coi, afreq, alpha = 0.05, nr = 1000, spec = 1, quiet = FALSE) {
-    indices <- combn(1:length(dsmp), 2, simplify = FALSE)
+analyse.all.pairs.relatedness <- function(
+  dsmp,
+  coi,
+  afreq,
+  alpha = 0.05,
+  nr = 1000,
+  spec = 1,
+  quiet = FALSE
+) {
+  indices <- combn(1:length(dsmp), 2, simplify = FALSE)
 
-    if (spec == 1) {
-      res <- .analyse.all.pairs.relatedness.serial(
-        indices,
-        dsmp,
-        coi,
-        afreq,
-        alpha,
-        nr,
-        quiet
-      )
-    } else {
-      res <-
-        .analyse.all.pairs.relatedness.parallel(
-          indices,
-          dsmp,
-          coi,
-          afreq,
-          alpha,
-          nr,
-          spec,
-          quiet
-        )
-    }
-
-    pairs <- vapply(indices, function(x) names(dsmp)[x], character(2))
-    coi1 <- vapply(indices, function(x) coi[x[1]], numeric(1))
-    coi2 <- vapply(indices, function(x) coi[x[2]], numeric(1))
-    rhats <- lapply(res, function(x) x[["rhat"]])
-    Ms <- lengths(rhats)
-    rtotals <- vapply(rhats, sum, numeric(1))
-    confints <- vapply(res, function(x) range(x[["confreg"]]), numeric(2))
-
-    data.frame(
-      sample_id1 = pairs[1, ],
-      sample_id2 = pairs[2, ],
-      coi1 = coi1,
-      coi2 = coi2,
-      M = Ms,
-      rtotal = rtotals,
-      lower_CI = confints[1, ],
-      upper_CI = confints[2, ],
-      scaled_r = rtotals / pmin(coi1, coi2)
+  if (spec == 1) {
+    res <- .analyse.all.pairs.relatedness.serial(
+      indices,
+      dsmp,
+      coi,
+      afreq,
+      alpha,
+      nr,
+      quiet
+    )
+  } else {
+    res <- .analyse.all.pairs.relatedness.parallel(
+      indices,
+      dsmp,
+      coi,
+      afreq,
+      alpha,
+      nr,
+      spec,
+      quiet
     )
   }
+
+  pairs <- vapply(indices, function(x) names(dsmp)[x], character(2))
+  coi1 <- vapply(indices, function(x) coi[x[1]], numeric(1))
+  coi2 <- vapply(indices, function(x) coi[x[2]], numeric(1))
+  rhats <- lapply(res, function(x) x[["rhat"]])
+  Ms <- lengths(rhats)
+  rtotals <- vapply(rhats, sum, numeric(1))
+  confints <- vapply(res, function(x) range(x[["confreg"]]), numeric(2))
+
+  data.frame(
+    sample_id1 = pairs[1, ],
+    sample_id2 = pairs[2, ],
+    coi1 = coi1,
+    coi2 = coi2,
+    M = Ms,
+    rtotal = rtotals,
+    lower_CI = confints[1, ],
+    upper_CI = confints[2, ],
+    scaled_r = rtotals / pmin(coi1, coi2)
+  )
+}
 
 
 ## Run the commands below step-by-step
@@ -254,8 +178,11 @@ spec <- 1
 
 mall.estimate <- analyse.all.pairs.relatedness(dsmp, coi, afreq, spec = spec)
 
-mall.estimate.file <-
-  paste0(output.dir, "/", "mhap_between_relatedness_estimate.tsv")
+mall.estimate.file <- paste0(
+  output.dir,
+  "/",
+  "mhap_between_relatedness_estimate.tsv"
+)
 
 write.table(
   mall.estimate,

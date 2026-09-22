@@ -1,7 +1,8 @@
 #!/usr/bin/env Rscript
 library(dcifer)
 
-## Load all functions by running everything from line 5-171
+## Load all functions by running everything from line 5-158
+# function below is replaced by matchAfreq if using dcifer >=1.5.0
 # use case: alleles in dsmp are not present in the population allele
 pad.afreq <- function(afreq, dsmp) {
   # assumes the sample allele frequencies are more diverse

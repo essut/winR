@@ -20,6 +20,8 @@ Steps:
 
 After each step, please restart R.
 
+As an alternative to MOIRE, use plot_mean_nallele.R instead, which estimates infection complexity using the mean number of alleles.
+
 
 To evaluate the performance of a genetic marker panel in inferring relatedness, install 'paneljudge':
 

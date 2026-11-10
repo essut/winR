@@ -21,6 +21,7 @@ Steps:
 After each step, please restart R.
 
 As an alternative to MOIRE, use plot_mean_nallele.R instead, which estimates infection complexity using the mean number of alleles.
+Expected heterozygosity per sample can also be calculated using plot_expected_heterozygosity.R.
 
 
 To evaluate the performance of a genetic marker panel in inferring relatedness, install 'paneljudge':

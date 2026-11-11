@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-## Load all functions by running everything from line 4-61
+## Load all functions by running everything from line 4-56
 plot.posterior.burnin.trace <- function(mcmc_results) {
   for (i in seq_along(mcmc_results[["chains"]])) {
     chain <- mcmc_results[["chains"]][[i]]
@@ -45,18 +45,13 @@ plot.posterior.sample.acf <- function(mcmc_results) {
   for (i in seq_along(mcmc_results[["chains"]])) {
     chain <- mcmc_results[["chains"]][[i]]
 
-    acf <-
-      acf(
-        chain[["posterior_sample"]],
-        lag.max = length(chain[["posterior_sample"]]) / 5,
-        plot = FALSE
-      )
-
-    plot(
-      acf,
-      main = paste0("Chain ", i),
-      ylab = "Posterior (sample) ACF"
+    acf <- acf(
+      chain[["posterior_sample"]],
+      lag.max = length(chain[["posterior_sample"]]) / 5,
+      plot = FALSE
     )
+
+    plot(acf, main = paste0("Chain ", i), ylab = "Posterior (sample) ACF")
   }
 }
 
@@ -81,22 +76,25 @@ data <- moire::load_long_form_data(df)
 # burn-in = 1,000 [burnin], samples per chain = 1,000 [samples_per_chain]
 # parallel tempering chains = 40 chains between 0.5 to 1 [pt_chains]
 # adjust the number of threads [pt_num_threads] accordingly
+# on MOIRE >= 3.7.0, a [seed] can be manually set (default to 1)
+# or randomly generated (set to NULL)
 burnin <- 1000
 pt_num_threads <- 40
 pt_chains <- seq(0.5, 1, length.out = 40)
 samples_per_chain <- 1000
+seed <- 1
 
-mcmc_results <-
-  moire::run_mcmc(
-    data = data,
-    is_missing = data[["is_missing"]],
-    burnin = burnin,
-    samples_per_chain = samples_per_chain,
-    r_alpha = 3,
-    r_beta = 3,
-    pt_chains = pt_chains,
-    pt_num_threads = pt_num_threads
-  )
+mcmc_results <- moire::run_mcmc(
+  data = data,
+  is_missing = data[["is_missing"]],
+  burnin = burnin,
+  samples_per_chain = samples_per_chain,
+  r_alpha = 3,
+  r_beta = 3,
+  pt_chains = pt_chains,
+  pt_num_threads = pt_num_threads,
+  seed = seed # remove this line if using MOIRE < 3.7.0
+)
 
 file <- paste0(output_dir, "/", "mhap_MOIRE.rds")
 
@@ -104,8 +102,7 @@ saveRDS(mcmc_results, file = file)
 
 
 # Ideally, all swap_rate should be above 0.25
-chain_swaps_plot_file <-
-  paste0(output_dir, "/", "mhap_MOIRE_chain_swaps.pdf")
+chain_swaps_plot_file <- paste0(output_dir, "/", "mhap_MOIRE_chain_swaps.pdf")
 pdf(file = chain_swaps_plot_file, width = 3, height = 2)
 
 print(moire::plot_chain_swaps(mcmc_results))
@@ -117,24 +114,33 @@ dev.off()
 nchain <- length(mcmc_results[["chains"]])
 m <- ceiling(sqrt(nchain))
 
-posterior_burnin_trace_plot_file <-
-  paste0(output_dir, "/", "mhap_MOIRE_posterior_burnin_trace.pdf")
+posterior_burnin_trace_plot_file <- paste0(
+  output_dir,
+  "/",
+  "mhap_MOIRE_posterior_burnin_trace.pdf"
+)
 pdf(file = posterior_burnin_trace_plot_file, width = 7, height = 7)
 
 par(mfrow = c(m, m))
 plot.posterior.burnin.trace(mcmc_results)
 dev.off()
 
-posterior_sample_trace_plot_file <-
-  paste0(output_dir, "/", "mhap_MOIRE_posterior_sample_trace.pdf")
+posterior_sample_trace_plot_file <- paste0(
+  output_dir,
+  "/",
+  "mhap_MOIRE_posterior_sample_trace.pdf"
+)
 pdf(file = posterior_sample_trace_plot_file, width = 7, height = 7)
 
 par(mfrow = c(m, m))
 plot.posterior.sample.trace(mcmc_results)
 dev.off()
 
-posterior_sample_acf_plot_file <-
-  paste0(output_dir, "/", "mhap_MOIRE_posterior_sample_ACF.pdf")
+posterior_sample_acf_plot_file <- paste0(
+  output_dir,
+  "/",
+  "mhap_MOIRE_posterior_sample_ACF.pdf"
+)
 pdf(file = posterior_sample_acf_plot_file, width = 7, height = 7)
 
 par(mfrow = c(m, m))
@@ -159,11 +165,10 @@ write.table(
 
 polyclonal_status_file <- paste0(output_dir, "/", "mhap_polyclonal_status.tsv")
 
-polyclonal_status <-
-  data.frame(
-    sample_id = coi_summary[["sample_id"]],
-    is_polyclonal = coi_summary[["prob_polyclonal"]] >= 0.5
-  )
+polyclonal_status <- data.frame(
+  sample_id = coi_summary[["sample_id"]],
+  is_polyclonal = coi_summary[["prob_polyclonal"]] >= 0.5
+)
 
 write.table(
   polyclonal_status,

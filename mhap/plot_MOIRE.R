@@ -62,27 +62,59 @@ cols <- palette.colors(palette = "Tableau 10")
 palette <- setNames(cols[1:nlevels(z)], levels(z))
 
 
-coi_plot_file <- paste0(output_dir, "/", "mhap_COI.pdf")
+naive_coi_plot_file <- paste0(output_dir, "/", "mhap_naive_COI.pdf")
 
 # FIXME: adjust plotting template if necessary
-pdf(file = coi_plot_file, width = 4, height = 4)
+pdf(file = naive_coi_plot_file, width = 4, height = 4)
 
 ggplot(
   coi_summary,
-  aes(x = as.factor(.data[[metadata_group_column]]), y = post_coi_mean)
+  aes(x = as.factor(.data[[metadata_group_column]]), y = naive_coi)
 ) +
   geom_jitter(
     aes(colour = as.factor(.data[[metadata_group_column]])),
     width = 0.3,
-    height = 0,
+    height = 0.2,
     alpha = 0.5,
     show.legend = FALSE
   ) +
   geom_boxplot(fill = NA, outlier.shape = NA) +
   xlab(metadata_group_column) +
-  ylab("COI") +
+  ylab("Naive complexity of infection") +
   theme_classic() +
-  scale_y_continuous(breaks = 1:ceiling(max(coi_summary[["post_coi_mean"]]))) +
+  scale_y_continuous(breaks = 1:ceiling(max(coi_summary[["naive_coi"]]))) +
+  scale_colour_manual(breaks = levels(z), values = palette)
+
+dev.off()
+
+
+offset_naive_coi_plot_file <- paste0(
+  output_dir,
+  "/",
+  "mhap_offset_naive_COI.pdf"
+)
+
+# FIXME: adjust plotting template if necessary
+pdf(file = offset_naive_coi_plot_file, width = 4, height = 4)
+
+ggplot(
+  coi_summary,
+  aes(x = as.factor(.data[[metadata_group_column]]), y = offset_naive_coi)
+) +
+  geom_jitter(
+    aes(colour = as.factor(.data[[metadata_group_column]])),
+    width = 0.3,
+    height = 0.2,
+    alpha = 0.5,
+    show.legend = FALSE
+  ) +
+  geom_boxplot(fill = NA, outlier.shape = NA) +
+  xlab(metadata_group_column) +
+  ylab("Offset naive complexity of infection") +
+  theme_classic() +
+  scale_y_continuous(
+    breaks = 1:ceiling(max(coi_summary[["offset_naive_coi"]]))
+  ) +
   scale_colour_manual(breaks = levels(z), values = palette)
 
 dev.off()
@@ -157,7 +189,7 @@ ggplot(
   ) +
   geom_boxplot(fill = NA, outlier.shape = NA) +
   xlab(metadata_group_column) +
-  ylab("eMOI") +
+  ylab("Effective complexity of infection") +
   theme_classic() +
   scale_y_continuous(
     breaks = 1:ceiling(max(effective_coi_summary[["post_effective_coi_mean"]]))

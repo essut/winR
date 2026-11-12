@@ -2,7 +2,7 @@
 library(readxl)
 library(paneljudge)
 
-## Load all functions by running everything from line 6-259
+## Load all functions by running everything from line 6-257
 create.markers <- function(dlong) {
   loci <- unique(dlong[["locus"]])
   Chr.Pos.Amplicon_name <- strsplit(loci, ":")
@@ -19,16 +19,15 @@ create.markers <- function(dlong) {
 
   pos <- rowMeans(cbind(Start, Stop))
 
-  markers <-
-    data.frame(
-      Amplicon_name,
-      Chr,
-      Start,
-      Stop,
-      length = Stop - Start,
-      pos,
-      chrom
-    )
+  markers <- data.frame(
+    Amplicon_name,
+    Chr,
+    Start,
+    Stop,
+    length = Stop - Start,
+    pos,
+    chrom
+  )
 
   markers <- markers[do.call(order, markers[, c("chrom", "Start", "Stop")]), ]
   row.names(markers) <- markers[["Amplicon_name"]]
@@ -41,43 +40,39 @@ create.markers <- function(dlong) {
 
 
 create.fs <- function(dlong, markers) {
-  markers[["locus"]] <-
-    paste0(
-      markers[["Chr"]],
-      ":",
-      markers[["Start"]],
-      "-",
-      markers[["Stop"]],
-      ":",
-      markers[["Amplicon_name"]]
-    )
+  markers[["locus"]] <- paste0(
+    markers[["Chr"]],
+    ":",
+    markers[["Start"]],
+    "-",
+    markers[["Stop"]],
+    ":",
+    markers[["Amplicon_name"]]
+  )
 
   dlong.markers <- merge(dlong, markers, sort = FALSE)
-  dlong.markers[["Amplicon_name"]] <-
-    factor(
-      dlong.markers[["Amplicon_name"]],
-      levels = markers[["Amplicon_name"]]
-    )
+  dlong.markers[["Amplicon_name"]] <- factor(
+    dlong.markers[["Amplicon_name"]],
+    levels = markers[["Amplicon_name"]]
+  )
 
-  allele.count.per.locus <-
-    tapply(
-      dlong.markers[["allele"]],
-      dlong.markers[["Amplicon_name"]],
-      table
-    )
+  allele.count.per.locus <- tapply(
+    dlong.markers[["allele"]],
+    dlong.markers[["Amplicon_name"]],
+    table
+  )
 
   allele.frequency.per.locus <- lapply(allele.count.per.locus, proportions)
-  allele.frequency.per.locus <-
-    lapply(allele.frequency.per.locus, sort, decreasing = TRUE)
+  allele.frequency.per.locus <- lapply(
+    allele.frequency.per.locus,
+    sort,
+    decreasing = TRUE
+  )
 
   # pad allele frequencies to have the same length
-  allele.frequency.per.locus <-
-    lapply(
-      allele.frequency.per.locus,
-      function(x) {
-        c(x, numeric(max(lengths(allele.frequency.per.locus)) - length(x)))
-      }
-    )
+  allele.frequency.per.locus <- lapply(allele.frequency.per.locus, function(x) {
+    c(x, numeric(max(lengths(allele.frequency.per.locus)) - length(x)))
+  })
 
   fs <- do.call(rbind, allele.frequency.per.locus)
   colnames(fs) <- paste0("Allele.", seq_len(ncol(fs)))
@@ -95,13 +90,9 @@ create.fs <- function(dlong, markers) {
 create.frequencies <- function(dlong, markers, metadata.group.column) {
   groups <- unique(dlong[[metadata.group.column]])
 
-  frequencies <-
-    lapply(
-      groups,
-      function(x) {
-        create.fs(dlong[dlong[[metadata.group.column]] %in% x, ], markers)
-      }
-    )
+  frequencies <- lapply(groups, function(x) {
+    create.fs(dlong[dlong[[metadata.group.column]] %in% x, ], markers)
+  })
 
   names(frequencies) <- groups
 
@@ -141,8 +132,11 @@ compute.diversities <- function(frequencies, metadata.group.column) {
 
   for (group in names(frequencies)) {
     diversity <- compute_diversities(fs = frequencies[[group]])
-    diversity <-
-      data.frame(group, Amplicon_name = names(diversity), diversity = diversity)
+    diversity <- data.frame(
+      group,
+      Amplicon_name = names(diversity),
+      diversity = diversity
+    )
     names(diversity)[1] <- metadata.group.column
     row.names(diversity) <- NULL
 
@@ -160,12 +154,11 @@ compute.eff.cardinalities <- function(frequencies, metadata.group.column) {
 
   for (group in names(frequencies)) {
     eff.cardinality <- compute_eff_cardinalities(fs = frequencies[[group]])
-    eff.cardinality <-
-      data.frame(
-        group,
-        Amplicon_name = names(eff.cardinality),
-        eff_cardinality = eff.cardinality
-      )
+    eff.cardinality <- data.frame(
+      group,
+      Amplicon_name = names(eff.cardinality),
+      eff_cardinality = eff.cardinality
+    )
     names(eff.cardinality)[1] <- metadata.group.column
     row.names(eff.cardinality) <- NULL
 
@@ -188,15 +181,18 @@ estimate.r.and.k <- function(
   krhats <- list()
 
   for (group in names(frequencies)) {
-    simulated_Ys <-
-      simulate_Ys(frequencies[[group]], markers[["distances"]], k, r)
+    simulated_Ys <- simulate_Ys(
+      frequencies[[group]],
+      markers[["distances"]],
+      k,
+      r
+    )
 
-    krhat <-
-      estimate_r_and_k(
-        frequencies[[group]],
-        markers[["distances"]],
-        simulated_Ys
-      )
+    krhat <- estimate_r_and_k(
+      frequencies[[group]],
+      markers[["distances"]],
+      simulated_Ys
+    )
 
     khat <- krhat['khat']
     rhat <- krhat['rhat']
@@ -215,48 +211,50 @@ estimate.r.and.k <- function(
 }
 
 
-compute.r.and.k.CIs <-
-  function(
-    frequencies,
-    metadata.group.column,
-    markers,
-    krhats,
-    confidence = 95
-  ) {
-    kCIs <- vector("list", nrow(krhats))
-    rCIs <- vector("list", nrow(krhats))
+compute.r.and.k.CIs <- function(
+  frequencies,
+  metadata.group.column,
+  markers,
+  krhats,
+  confidence = 95
+) {
+  kCIs <- vector("list", nrow(krhats))
+  rCIs <- vector("list", nrow(krhats))
 
-    for (i in 1:nrow(krhats)) {
-      print(paste("Calculating CIs for row", i))
+  for (i in 1:nrow(krhats)) {
+    print(paste("Calculating CIs for row", i))
 
-      group <- krhats[i, metadata.group.column]
-      khat <- krhats[i, "khat"]
-      rhat <- krhats[i, "rhat"]
+    group <- krhats[i, metadata.group.column]
+    khat <- krhats[i, "khat"]
+    rhat <- krhats[i, "rhat"]
 
-      CIs <-
-        compute_r_and_k_CIs(
-          frequencies[[group]],
-          markers[["distances"]],
-          khat,
-          rhat,
-          confidence = confidence
-        )
+    CIs <- compute_r_and_k_CIs(
+      frequencies[[group]],
+      markers[["distances"]],
+      khat,
+      rhat,
+      confidence = confidence
+    )
 
-      kCI <-
-        setNames(CIs['khat', ], paste("khat", names(CIs['khat', ]), sep = "_"))
-      rCI <-
-        setNames(CIs['rhat', ], paste("rhat", names(CIs['rhat', ]), sep = "_"))
+    kCI <- setNames(
+      CIs['khat', ],
+      paste("khat", names(CIs['khat', ]), sep = "_")
+    )
+    rCI <- setNames(
+      CIs['rhat', ],
+      paste("rhat", names(CIs['rhat', ]), sep = "_")
+    )
 
-      kCIs[[i]] <- t(kCI)
-      rCIs[[i]] <- t(rCI)
-    }
-
-    kCIs <- do.call(rbind, kCIs)
-    rCIs <- do.call(rbind, rCIs)
-    krhats.CIs <- cbind(krhats, kCIs, rCIs)
-
-    return(krhats.CIs)
+    kCIs[[i]] <- t(kCI)
+    rCIs[[i]] <- t(rCI)
   }
+
+  kCIs <- do.call(rbind, kCIs)
+  rCIs <- do.call(rbind, rCIs)
+  krhats.CIs <- cbind(krhats, kCIs, rCIs)
+
+  return(krhats.CIs)
+}
 
 
 ## Run the commands below step-by-step
@@ -278,30 +276,31 @@ sfile <- "location/to/data/mhap_filtered.tsv"
 
 dlong <- read.delim(sfile)
 
-# FIXME: change to path of polyclonal status
-polyclonal.status.file <- "location/to/MOIRE/mhap_polyclonal_status.tsv"
+# FIXME: change to path of complexity status
+complexity.status.file <- "location/to/MOIRE/mhap_effective_COI_complexity_status.tsv"
 
-polyclonal.status <- read.delim(polyclonal.status.file)
+complexity.status <- read.delim(complexity.status.file)
 
-## filter to monoclonal samples
-dlong <-
-  dlong[
-    dlong[["sample_id"]] %in%
-      polyclonal.status[!polyclonal.status[["is_polyclonal"]], "sample_id"],
-  ]
+## filter to low complexity samples
+dlong <- dlong[
+  dlong[["sample_id"]] %in%
+    complexity.status[
+      complexity.status[["effective_COI_complexity"]] %in% "low",
+      "sample_id"
+    ],
+]
 
 
 # FIXME: change according sample and group column in metadata
 metadata.sample.column <- "ID"
 metadata.group.column <- "Year"
 
-dlong <-
-  merge(
-    dlong,
-    metadata[, c(metadata.sample.column, metadata.group.column)],
-    by.x = "sample_id",
-    by.y = metadata.sample.column
-  )
+dlong <- merge(
+  dlong,
+  metadata[, c(metadata.sample.column, metadata.group.column)],
+  by.x = "sample_id",
+  by.y = metadata.sample.column
+)
 
 
 markers <- create.markers(dlong)
@@ -324,8 +323,11 @@ write.table(
 )
 
 
-eff.cardinalities.file <-
-  paste0(output.dir, "/", "mhap_paneljudge_eff_cardinalities.tsv")
+eff.cardinalities.file <- paste0(
+  output.dir,
+  "/",
+  "mhap_paneljudge_eff_cardinalities.tsv"
+)
 
 eff.cardinalities <- compute.eff.cardinalities(
   frequencies,
@@ -357,8 +359,13 @@ for (i in 1:n) {
     for (r in rs) {
       print(paste("i =", i, "k =", k, "r =", r))
 
-      krhat <-
-        estimate.r.and.k(frequencies, metadata.group.column, markers, k, r)
+      krhat <- estimate.r.and.k(
+        frequencies,
+        metadata.group.column,
+        markers,
+        k,
+        r
+      )
 
       krhats[[j]] <- cbind(Pair = i, krhat)
       j <- j + 1
@@ -368,13 +375,7 @@ for (i in 1:n) {
 
 krhats <- do.call(rbind, krhats)
 
-write.table(
-  krhats,
-  krhats.file,
-  quote = FALSE,
-  sep = "\t",
-  row.names = FALSE
-)
+write.table(krhats, krhats.file, quote = FALSE, sep = "\t", row.names = FALSE)
 
 ## perform the lines below if confidence intervals are needed
 ## this might take a while to perform

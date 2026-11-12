@@ -146,7 +146,7 @@ plot(
 abline(h = high.complexity.mean.nallele.cutoff, col = "red", lt = "dashed")
 dev.off()
 
-mhap.filtered.mean.nallele[["complexity"]] <- ifelse(
+mhap.filtered.mean.nallele[["mean_nallele_complexity"]] <- ifelse(
   mhap.filtered.mean.nallele[["mean_nallele"]] >
     high.complexity.mean.nallele.cutoff,
   "high",
@@ -156,11 +156,11 @@ mhap.filtered.mean.nallele[["complexity"]] <- ifelse(
 mhap.filtered.mean.nallele.complexity.file <- paste0(
   output.dir,
   "/",
-  "mhap_complexity_status.tsv"
+  "mhap_mean_nallele_complexity_status.tsv"
 )
 
 write.table(
-  mhap.filtered.mean.nallele[, c("sample_id", "complexity")],
+  mhap.filtered.mean.nallele[, c("sample_id", "mean_nallele_complexity")],
   file = mhap.filtered.mean.nallele.complexity.file,
   quote = FALSE,
   sep = "\t",

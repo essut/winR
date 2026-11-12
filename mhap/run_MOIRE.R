@@ -163,22 +163,6 @@ write.table(
 )
 
 
-polyclonal_status_file <- paste0(output_dir, "/", "mhap_polyclonal_status.tsv")
-
-polyclonal_status <- data.frame(
-  sample_id = coi_summary[["sample_id"]],
-  is_polyclonal = coi_summary[["prob_polyclonal"]] >= 0.5
-)
-
-write.table(
-  polyclonal_status,
-  polyclonal_status_file,
-  quote = FALSE,
-  sep = "\t",
-  row.names = FALSE
-)
-
-
 effective_coi_summary_file <- paste0(
   output_dir,
   "/",
@@ -189,6 +173,52 @@ effective_coi_summary <- moire::summarize_effective_coi(mcmc_results)
 write.table(
   effective_coi_summary,
   effective_coi_summary_file,
+  quote = FALSE,
+  sep = "\t",
+  row.names = FALSE
+)
+
+
+effective_COI_complexity_file <- paste0(
+  output_dir,
+  "/",
+  "mhap_effective_COI_complexity_status.tsv"
+)
+
+# FIXME: determine cutoff of high complexity infection based on effective COI
+high_complexity_effective_COI_cutoff <- 1.1
+
+effective_COI_sorted_file <- paste0(
+  output_dir,
+  "/",
+  "mhap_effective_COI_sorted.pdf"
+)
+
+# FIXME: adjust size (in inches) of effective COI plot
+pdf(file = effective_COI_sorted_file, width = 4, height = 4)
+par(mar = c(1, 4, 1, 1) + 0.1)
+plot(
+  sort(effective_coi_summary[["post_effective_coi_mean"]]),
+  ylab = "Effective complexity of infection",
+  xaxt = "n",
+  xlab = NA
+)
+abline(h = high_complexity_effective_COI_cutoff, col = "red", lt = "dashed")
+dev.off()
+
+effective_COI_complexity <- data.frame(
+  sample_id = effective_coi_summary[["sample_id"]],
+  effective_COI_complexity = ifelse(
+    effective_coi_summary[["post_effective_coi_mean"]] >
+      high_complexity_effective_COI_cutoff,
+    "high",
+    "low"
+  )
+)
+
+write.table(
+  effective_COI_complexity,
+  effective_COI_complexity_file,
   quote = FALSE,
   sep = "\t",
   row.names = FALSE

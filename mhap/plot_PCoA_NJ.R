@@ -3,20 +3,21 @@ library(readxl)
 library(ape)
 library(ggplot2)
 
-## Load all functions by running everything from line 7-151
+## Load all functions by running everything from line 7-149
 create.allele.matrix <- function(dlong) {
   # calls the major allele in each locus for each sample
-  dlong.major <-
-    merge(aggregate(count ~ sample_id + locus, data = dlong, max), dlong)
+  dlong.major <- merge(
+    aggregate(count ~ sample_id + locus, data = dlong, max),
+    dlong
+  )
 
   # convert as a matrix, randomly picks one allele if multiple exists
-  dlong.major.wide <-
-    reshape(
-      dlong.major[, c("sample_id", "locus", "allele")],
-      direction = "wide",
-      idvar = "sample_id",
-      timevar = "locus"
-    )
+  dlong.major.wide <- reshape(
+    dlong.major[, c("sample_id", "locus", "allele")],
+    direction = "wide",
+    idvar = "sample_id",
+    timevar = "locus"
+  )
 
   row.names(dlong.major.wide) <- dlong.major.wide[["sample_id"]]
   dlong.major.wide[["sample_id"]] <- NULL
@@ -30,12 +31,10 @@ calculate.missingness <- function(dlong.major.wide) {
   missing.locus.per.sample <- rowSums(missing.alleles)
   missing.sample.per.locus <- colSums(missing.alleles)
 
-  return(
-    list(
-      missing.locus.per.sample = missing.locus.per.sample,
-      missing.sample.per.locus = missing.sample.per.locus
-    )
-  )
+  return(list(
+    missing.locus.per.sample = missing.locus.per.sample,
+    missing.sample.per.locus = missing.sample.per.locus
+  ))
 }
 
 
@@ -44,91 +43,91 @@ get.usable.markers <- function(dlong.major.wide.missingness) {
 }
 
 
-plot.missing.sample.per.locus <-
-  function(dlong.major.wide.missingness, missing.sample.per.locus.cutoff) {
-    hist(
-      dlong.major.wide.missingness[["missing.sample.per.locus"]],
-      breaks = "FD",
-      right = FALSE,
-      main = "Number of missing sample per locus",
-      xlab = NULL
-    )
+plot.missing.sample.per.locus <- function(
+  dlong.major.wide.missingness,
+  missing.sample.per.locus.cutoff
+) {
+  hist(
+    dlong.major.wide.missingness[["missing.sample.per.locus"]],
+    breaks = "FD",
+    right = FALSE,
+    main = "Number of missing sample per locus",
+    xlab = NULL
+  )
 
-    abline(v = missing.sample.per.locus.cutoff + 1, col = "red", lty = "dashed")
-  }
-
-
-plot.missing.locus.per.sample <-
-  function(dlong.major.wide.missingness, missing.locus.per.sample.cutoff) {
-    hist(
-      dlong.major.wide.missingness[["missing.locus.per.sample"]],
-      breaks = "FD",
-      right = FALSE,
-      main = "Number of missing locus per sample",
-      xlab = NULL
-    )
-
-    abline(v = missing.locus.per.sample.cutoff + 1, col = "red", lty = "dashed")
-  }
+  abline(v = missing.sample.per.locus.cutoff + 1, col = "red", lty = "dashed")
+}
 
 
-.compute.parents.groups <-
-  function(edge.groups, edges, mixed.group) {
-    # determine what the parents' group would be based on
-    # the groups passed on from the children
-    tapply(edge.groups[, 1], edges[, 1], function(x) {
-      # retrieve children's groups
-      unique.groups <- na.omit(unique(x))
+plot.missing.locus.per.sample <- function(
+  dlong.major.wide.missingness,
+  missing.locus.per.sample.cutoff
+) {
+  hist(
+    dlong.major.wide.missingness[["missing.locus.per.sample"]],
+    breaks = "FD",
+    right = FALSE,
+    main = "Number of missing locus per sample",
+    xlab = NULL
+  )
 
-      # if the children's groups are mixed
-      if (mixed.group %in% unique.groups) {
-        return(mixed.group)
-      }
+  abline(v = missing.locus.per.sample.cutoff + 1, col = "red", lty = "dashed")
+}
 
-      unique.length <- length(unique.groups)
 
-      # if no information about the children's groups
-      # we'll return back to this parent later
-      if (unique.length == 0) {
-        return(NA)
-      }
+.compute.parents.groups <- function(edge.groups, edges, mixed.group) {
+  # determine what the parents' group would be based on
+  # the groups passed on from the children
+  tapply(edge.groups[, 1], edges[, 1], function(x) {
+    # retrieve children's groups
+    unique.groups <- na.omit(unique(x))
 
-      # if the children only have one group
-      if (unique.length == 1) {
-        return(unique.groups)
-      }
-
-      # if the children have multiple groups
+    # if the children's groups are mixed
+    if (mixed.group %in% unique.groups) {
       return(mixed.group)
-    })
-  }
+    }
 
-.update.parents.groups <-
-  function(edge.groups, edges, mixed.group) {
-    parents.groups <-
-      .compute.parents.groups(edge.groups, edges, mixed.group)
+    unique.length <- length(unique.groups)
 
-    parent.as.child <- match(edges[, 2], names(parents.groups))
+    # if no information about the children's groups
+    # we'll return back to this parent later
+    if (unique.length == 0) {
+      return(NA)
+    }
 
-    # if the parents are children of other parents,
-    # carry the group of parents as the child's group
-    edge.groups[, 2] <-
-      mapply(
-        function(x, y) {
-          if (is.na(y)) {
-            return(x)
-          } else {
-            return(y)
-          }
-        },
-        x = edge.groups[, 2],
-        y = parents.groups[parent.as.child]
-      )
+    # if the children only have one group
+    if (unique.length == 1) {
+      return(unique.groups)
+    }
 
-    edge.groups[, 1] <- edge.groups[, 2]
+    # if the children have multiple groups
+    return(mixed.group)
+  })
+}
 
-    edge.groups
-  }
+.update.parents.groups <- function(edge.groups, edges, mixed.group) {
+  parents.groups <- .compute.parents.groups(edge.groups, edges, mixed.group)
+
+  parent.as.child <- match(edges[, 2], names(parents.groups))
+
+  # if the parents are children of other parents,
+  # carry the group of parents as the child's group
+  edge.groups[, 2] <- mapply(
+    function(x, y) {
+      if (is.na(y)) {
+        return(x)
+      } else {
+        return(y)
+      }
+    },
+    x = edge.groups[, 2],
+    y = parents.groups[parent.as.child]
+  )
+
+  edge.groups[, 1] <- edge.groups[, 2]
+
+  edge.groups
+}
 
 group.NJ <- function(NJ, tip.groups, mixed.group) {
   edges <- NJ[["edge"]]
@@ -142,8 +141,7 @@ group.NJ <- function(NJ, tip.groups, mixed.group) {
 
   # trace back parent groups until they meet different groups
   while (sum(is.na(edge.groups))) {
-    edge.groups <-
-      .update.parents.groups(edge.groups, edges, mixed.group)
+    edge.groups <- .update.parents.groups(edge.groups, edges, mixed.group)
   }
 
   # finalise edge groups
@@ -170,17 +168,19 @@ sfile <- "location/to/data/mhap_filtered.tsv"
 
 dlong <- read.delim(sfile)
 
-# FIXME: change to path of polyclonal status
-polyclonal.status.file <- "location/to/MOIRE/mhap_polyclonal_status.tsv"
+# FIXME: change to path of complexity status
+complexity.status.file <- "location/to/MOIRE/mhap_effective_COI_complexity_status.tsv"
 
-polyclonal.status <- read.delim(polyclonal.status.file)
+complexity.status <- read.delim(complexity.status.file)
 
-## filter to monoclonal samples
-dlong <-
-  dlong[
-    dlong[["sample_id"]] %in%
-      polyclonal.status[!polyclonal.status[["is_polyclonal"]], "sample_id"],
-  ]
+## filter to low complexity samples
+dlong <- dlong[
+  dlong[["sample_id"]] %in%
+    complexity.status[
+      complexity.status[["effective_COI_complexity"]] %in% "low",
+      "sample_id"
+    ],
+]
 
 dlong.major.wide <- create.allele.matrix(dlong)
 dlong.major.wide.missingness <- calculate.missingness(dlong.major.wide)
@@ -195,8 +195,11 @@ get.usable.markers(dlong.major.wide.missingness)
 # FIXME: set a cutoff to remove as many missing locus as possible
 missing.sample.per.locus.cutoff <- 5
 
-missing.sample.per.locus.plot.file <-
-  paste0(output.dir, "/", "mhap_missing_sample_per_locus.pdf")
+missing.sample.per.locus.plot.file <- paste0(
+  output.dir,
+  "/",
+  "mhap_missing_sample_per_locus.pdf"
+)
 
 pdf(file = missing.sample.per.locus.plot.file)
 plot.missing.sample.per.locus(
@@ -208,15 +211,15 @@ dev.off()
 
 ## check if happy with the cutoff for missing sample per locus
 ## if not, go back and change the cutoff
-dlong.major.wide.locfilt <-
-  dlong.major.wide[,
-    dlong.major.wide.missingness[["missing.sample.per.locus"]] <=
-      missing.sample.per.locus.cutoff
-  ]
+dlong.major.wide.locfilt <- dlong.major.wide[,
+  dlong.major.wide.missingness[["missing.sample.per.locus"]] <=
+    missing.sample.per.locus.cutoff
+]
 
 
-dlong.major.wide.locfilt.missingness <-
-  calculate.missingness(dlong.major.wide.locfilt)
+dlong.major.wide.locfilt.missingness <- calculate.missingness(
+  dlong.major.wide.locfilt
+)
 
 ## check number of samples and markers currently available
 dim(dlong.major.wide.locfilt)
@@ -228,8 +231,11 @@ get.usable.markers(dlong.major.wide.locfilt.missingness)
 # FIXME: set a cutoff to remove as many missing sample as possible
 missing.locus.per.sample.cutoff <- 0
 
-missing.locus.per.sample.plot.file <-
-  paste0(output.dir, "/", "mhap_missing_locus_per_sample.pdf")
+missing.locus.per.sample.plot.file <- paste0(
+  output.dir,
+  "/",
+  "mhap_missing_locus_per_sample.pdf"
+)
 
 pdf(file = missing.locus.per.sample.plot.file)
 plot.missing.locus.per.sample(
@@ -241,15 +247,15 @@ dev.off()
 
 ## check if happy with the cutoff for missing sample per locus
 ## if not, go back and change the cutoff
-dlong.major.wide.locfilt.samfilt <-
-  dlong.major.wide.locfilt[
-    dlong.major.wide.locfilt.missingness[["missing.locus.per.sample"]] <=
-      missing.locus.per.sample.cutoff,
-  ]
+dlong.major.wide.locfilt.samfilt <- dlong.major.wide.locfilt[
+  dlong.major.wide.locfilt.missingness[["missing.locus.per.sample"]] <=
+    missing.locus.per.sample.cutoff,
+]
 
 
-dlong.major.wide.locfilt.samfilt.missingness <-
-  calculate.missingness(dlong.major.wide.locfilt.samfilt)
+dlong.major.wide.locfilt.samfilt.missingness <- calculate.missingness(
+  dlong.major.wide.locfilt.samfilt
+)
 
 ## check number of samples and markers currently available
 dim(dlong.major.wide.locfilt.samfilt)
@@ -286,13 +292,12 @@ vectors <- res[["vectors"]]
 Relative_eig <- res[["values"]][["Relative_eig"]] * 100
 
 
-data <-
-  merge(
-    vectors,
-    metadata,
-    by.x = "row.names",
-    by.y = metadata.sample.column
-  )
+data <- merge(
+  vectors,
+  metadata,
+  by.x = "row.names",
+  by.y = metadata.sample.column
+)
 
 
 PCoA.prefix.filename <- paste0(output.dir, "/", "mhap_PCoA")

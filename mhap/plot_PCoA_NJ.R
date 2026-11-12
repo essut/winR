@@ -395,6 +395,38 @@ legend(
 
 dev.off()
 
+## rooted, unlabelled
+# FIXME: adjust size (in inches) of NJ plot
+pdf(
+  paste0(NJ.prefix.filename, "_rooted_unlabelled.pdf"),
+  width = 7,
+  height = 7.5
+)
+par(xpd = TRUE)
+
+plot(
+  tr,
+  type = "fan",
+  underscore = TRUE,
+  lab4ut = "axial",
+  show.tip.label = FALSE,
+  edge.color = edge.colours,
+  tip.color = tip.colours
+)
+
+tiplabels(pch = 21, bg = tip.colours, cex = 1)
+
+legend(
+  "bottom",
+  levels(z),
+  fill = palette,
+  ncol = 4,
+  title = metadata.group.column,
+  inset = -0.17
+)
+
+dev.off()
+
 ## unrooted, unlabelled
 # FIXME: adjust size (in inches) of NJ plot
 pdf(
@@ -413,6 +445,8 @@ plot(
   edge.color = edge.colours,
   tip.color = tip.colours
 )
+
+tiplabels(pch = 21, bg = tip.colours, cex = 1)
 
 legend(
   "bottom",
